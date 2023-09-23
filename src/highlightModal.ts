@@ -8,7 +8,6 @@ export class HighlightModal extends SuggestModal<Highlight> {
 		return this.highlight.filter((h) => h.content.includes(query));
 	}
 	renderSuggestion(item: Highlight, el: HTMLElement): void {
-		// get the basename of item.notelink
 		if (item.noteLink) {
 			const basename = item.noteLink?.split("/").pop();
 			el.createEl("div", { text: basename });

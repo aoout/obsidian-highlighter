@@ -15,7 +15,6 @@ class Section {
 		this.title = content.split("\n")[0].replace(/^# /, "");
 
 		const items = this.content.split("\n\n");
-        // 排除掉items中的第一个
         items.shift();
 		this.highlights = items.map((item) => {
 			const lines = item.split("\n@");
@@ -31,7 +30,6 @@ export class ExportHignlightParser {
 	content: string;
 	sections: Section[];
 	constructor(content: string) {
-		// "# 一段文本" 这样的形式代表标题。从一个标题出现，直到下一个标题出现，视为一个section,如此分割内容,并且按照标题文本分组
 		this.content = content;
 		this.sections = [];
         if(content){
@@ -76,7 +74,6 @@ export class ExportHignlightParser {
     }
 
     toString() {
-        // 需要深入高亮级别进行实现
         console.log(this.sections);
         let content = ""
         this.sections.forEach(section => {
@@ -88,10 +85,8 @@ export class ExportHignlightParser {
                 }
                 content += "\n\n"
             })
-            // 删除content最后一个字符
             content = content.slice(0, -1)
         })
-        // 删除content最后一个字符
         content = content.slice(0, -1)
         return content
     }

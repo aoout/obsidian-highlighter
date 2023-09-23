@@ -89,7 +89,6 @@ export default class MyPlugin extends Plugin {
 						);
 						const path = `${dir}/exported-highlights.md`;
 						const file = this.app.vault.getAbstractFileByPath(path);
-						// 如果已经存在该文件，则读取其内容，也放进解析器里
 						if (file && file instanceof TFile) {
 							await this.app.vault
 								.cachedRead(file)
@@ -98,7 +97,6 @@ export default class MyPlugin extends Plugin {
 										content
 									);
 									oldParser.merge(parser);
-									// 使用parser.toString更新文件内容
 									this.app.vault.modify(
 										file,
 										oldParser.toString()
@@ -116,7 +114,6 @@ export default class MyPlugin extends Plugin {
 			id: "find-highlighted-note",
 			name: "Find highlighted note",
 			callback: () => {
-				// 找到当前激活文件同一目录下的导出高亮文件
 				const activeFile = this.app.workspace.getActiveFile();
 				const dir = activeFile?.parent?.name;
 				const path = `${dir}/exported-highlights.md`;
@@ -125,7 +122,6 @@ export default class MyPlugin extends Plugin {
 					// read the content of activeFile
 					this.app.vault.cachedRead(file).then((content) => {
 						const parser = new HighlightParser(content);
-						// 为每个高亮指定noteLink属性
 						parser.highlights.forEach((highlight) => {
 							highlight.noteLink = path.split(".md")[0];
 							console.log(highlight.noteLink);
