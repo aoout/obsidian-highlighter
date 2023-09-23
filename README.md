@@ -3,7 +3,7 @@
 Management Highlights in your vault.
 
 > [!WARNING]
-> Please be sure to back up your library first. In principle, this plugin will not destroy your library, but accidents may occur.
+> Please be sure to back up your vault first. In principle, this plugin will not destroy your library, but accidents may occur.
 
 ## RoadMap
 
