@@ -7,4 +7,5 @@ Management Highlights in your vault.
 
 ## RoadMap
 
-- [ ] Refactor the code to achieve a higher level of abstraction.
+- [x] Refactor the code to achieve a higher level of abstraction.
+- [ ] ...

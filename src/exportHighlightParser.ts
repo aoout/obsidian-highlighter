@@ -10,12 +10,11 @@ class Section {
 	content: string;
 	highlights: Highlight[];
 	constructor(content: string) {
-
 		this.content = content;
 		this.title = content.split("\n")[0].replace(/^# /, "");
 
 		const items = this.content.split("\n\n");
-        items.shift();
+		items.shift();
 		this.highlights = items.map((item) => {
 			const lines = item.split("\n@");
 			const content = lines[0];
@@ -32,24 +31,21 @@ export class ExportHignlightParser {
 	constructor(content: string) {
 		this.content = content;
 		this.sections = [];
-        if(content){
-            content.split("\n").forEach((line) => {
-                if (line.match(/^# /)) {
-                    this.sections.push(new Section(line));
-                } else {
-                    const lastSection = this.sections[this.sections.length - 1];
-                    this.sections[this.sections.length - 1] = new Section(
-                        lastSection.content + "\n" + line
-                    );
-                }
-            });
-            
-        }
-		
+		if (content) {
+			content.split("\n").forEach((line) => {
+				if (line.match(/^# /)) {
+					this.sections.push(new Section(line));
+				} else {
+					const lastSection = this.sections[this.sections.length - 1];
+					this.sections[this.sections.length - 1] = new Section(
+						lastSection.content + "\n" + line
+					);
+				}
+			});
+		}
 	}
 
 	addHighlight(content: string, sectionTitle: string) {
-
 		const section = this.sections.find(
 			(section) => section.title === sectionTitle
 		);
@@ -65,29 +61,42 @@ export class ExportHignlightParser {
 		}
 	}
 
-    merge(highlightParser: ExportHignlightParser) {
-        highlightParser.sections.forEach(section => {
-            section.highlights.forEach(highlight => {
-                this.addHighlight(highlight.content, section.title)
-            })
-        })
-    }
+	merge(highlightParser: ExportHignlightParser) {
+		highlightParser.sections.forEach((section) => {
+			const section2 = this.sections.find(
+				(section2) => section2.title === section.title
+			);
+			if (section2) {
+				section.highlights.forEach((highlight) => {
+					if (highlight.comment) {
+						const highlight2 = section2.highlights.find(
+							(highlight2) =>
+								highlight2.content === highlight.content
+						);
+						if (highlight2) {
+							highlight2.comment = highlight.comment;
+						}
+					}
+				});
+			}
+		});
+	}
 
-    toString() {
-        console.log(this.sections);
-        let content = ""
-        this.sections.forEach(section => {
-            content += "# " + section.title + "\n\n"
-            section.highlights.forEach(highlight => {
-                content += highlight.content
-                if(highlight.comment){
-                    content += "\n@" + highlight.comment
-                }
-                content += "\n\n"
-            })
-            content = content.slice(0, -1)
-        })
-        content = content.slice(0, -1)
-        return content
-    }
+	toString() {
+		console.log(this.sections);
+		let content = "";
+		this.sections.forEach((section) => {
+			content += "# " + section.title + "\n\n";
+			section.highlights.forEach((highlight) => {
+				content += highlight.content;
+				if (highlight.comment) {
+					content += "\n@" + highlight.comment;
+				}
+				content += "\n\n";
+			});
+			content = content.slice(0, -1);
+		});
+		content = content.slice(0, -1);
+		return content;
+	}
 }
