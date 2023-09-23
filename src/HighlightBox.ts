@@ -66,7 +66,18 @@ export class HighlightBox {
 		highlights: Highlight[]
 	): Promise<void> {
 		// Get the highlights of the current folder and all subfolders
+		// 实现一个对于folder.children的排序算法
+		folder.children.sort((a, b) => {
+			if (a instanceof TFolder && b instanceof TFile) {
+				return -1;
+			} else if (a instanceof TFile && b instanceof TFolder) {
+				return 1;
+			} else {
+				return a.name.localeCompare(b.name);
+			}
+		});
 		for (const file of folder.children) {
+			
 			if (file instanceof TFolder) {
 				await this.getHighlightsRecursively(file, highlights);
 			} else if (file instanceof TFile && file.extension == "md" && ! file.name.includes("-highlights")) {
