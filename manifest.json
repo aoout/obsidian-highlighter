@@ -3,7 +3,7 @@
 	"name": "Highlighter",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "",
+	"description": "Management Highlights in your vault.",
 	"author": "Obsidian",
 	"authorUrl": "https://obsidian.md",
 	"fundingUrl": "https://obsidian.md/pricing",

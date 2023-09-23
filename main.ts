@@ -78,7 +78,7 @@ export default class MyPlugin extends Plugin {
 						const parser = new ExportHignlightParser("");
 						highlights.forEach((highlight) => {
 							parser.addHighlight(
-								highlight.content,
+								"=="+highlight.content+"==",
 								highlight.noteLink?.split("/").pop() || ""
 							);
 						});
@@ -97,7 +97,7 @@ export default class MyPlugin extends Plugin {
 									const oldParser = new ExportHignlightParser(
 										content
 									);
-									// oldParser.merge(parser);
+									oldParser.merge(parser);
 									// 使用parser.toString更新文件内容
 									this.app.vault.modify(
 										file,
@@ -111,6 +111,31 @@ export default class MyPlugin extends Plugin {
 				}
 			},
 		});
+
+		this.addCommand({
+			id: "find-highlighted-note",
+			name: "Find highlighted note",
+			callback: () => {
+				// 找到当前激活文件同一目录下的导出高亮文件
+				const activeFile = this.app.workspace.getActiveFile();
+				const dir = activeFile?.parent?.name;
+				const path = `${dir}/exported-highlights.md`;
+				const file = this.app.vault.getAbstractFileByPath(path);
+				if (file && file instanceof TFile) {
+					// read the content of activeFile
+					this.app.vault.cachedRead(file).then((content) => {
+						const parser = new HighlightParser(content);
+						// 为每个高亮指定noteLink属性
+						parser.highlights.forEach((highlight) => {
+							highlight.noteLink = path.split(".md")[0];
+							console.log(highlight.noteLink);
+						});
+
+						new HighlightModal(this.app, parser.highlights).open();
+					});
+				}
+			}
+		})
 	}
 
 	async getHighlightsFromMOC(): Promise<void | Highlight[]> {
@@ -126,7 +151,6 @@ export default class MyPlugin extends Plugin {
 				if (file && file instanceof TFile) {
 					await this.app.vault.cachedRead(file).then((content) => {
 						const parser = new HighlightParser(content);
-						console.log(parser.highlights);
 						parser.highlights.forEach((highlight) => {
 							highlight.noteLink = item.link;
 							highlights.push(highlight);
@@ -134,7 +158,6 @@ export default class MyPlugin extends Plugin {
 					});
 				}
 			}
-			console.log(highlights);
 			return highlights;
 		}
 	}

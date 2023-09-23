@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-highlighter",
 	"version": "0.0.1",
-	"description": "",
+	"description": "Management Highlights in your vault.",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

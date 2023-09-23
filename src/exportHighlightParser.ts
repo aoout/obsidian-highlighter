@@ -18,7 +18,7 @@ class Section {
         // 排除掉items中的第一个
         items.shift();
 		this.highlights = items.map((item) => {
-			const lines = item.split("@");
+			const lines = item.split("\n@");
 			const content = lines[0];
 			const comment = lines[1];
 
@@ -51,6 +51,7 @@ export class ExportHignlightParser {
 	}
 
 	addHighlight(content: string, sectionTitle: string) {
+
 		const section = this.sections.find(
 			(section) => section.title === sectionTitle
 		);
@@ -83,15 +84,15 @@ export class ExportHignlightParser {
             section.highlights.forEach(highlight => {
                 content += highlight.content
                 if(highlight.comment){
-
-                    content += "@" + highlight.comment
+                    content += "\n@" + highlight.comment
                 }
                 content += "\n\n"
             })
             // 删除content最后一个字符
             content = content.slice(0, -1)
         })
-        
+        // 删除content最后一个字符
+        content = content.slice(0, -1)
         return content
     }
 }
