@@ -8,4 +8,4 @@ Management Highlights in your vault.
 ## RoadMap
 
 - [x] Refactor the code to achieve a higher level of abstraction.
-- [ ] ...
+- [ ] SettingsTab Page, user can specifies multiple tags used to identify HighlightBoxes on it.
