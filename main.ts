@@ -55,9 +55,10 @@ export default class MyPlugin extends Plugin {
 			name: "Find highlights on this HighlightBox",
 			callback: async () => {
 				const activeFile = this.app.workspace.getActiveFile();
+				if(!activeFile) return;
 				const box = await FolderHLBox.findBox(
 					this.app,
-					activeFile?.path || ""
+					activeFile?.path
 				);
 				if (!box) return;
 				const highlights = await box.getHighlights();
@@ -67,7 +68,7 @@ export default class MyPlugin extends Plugin {
 		});
 
 		this.app.workspace.on("file-open", async (file) => {
-			if (!file || file.basename.includes("-highlights")) return;
+			if (!file || !file.basename.includes("-highlights")) return;
 			const MOC = this.app.vault.getAbstractFileByPath(
 				file.path.replace("-highlights", "")
 			);

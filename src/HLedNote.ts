@@ -10,7 +10,10 @@ export class HLedNote {
 	highlights: Highlight[];
 	constructor(content: string) {
 		this.highlights = [];
-		const regex = /==(.+)==/g;
+		// const regex = /==(.+)==/g;
+		// 修改regex，尽可能地匹配更短的字符串
+		const regex = /==([^=]+)==/g;
+		
 		let match = regex.exec(content);
 		while (match) {
 			const start = match.index;
