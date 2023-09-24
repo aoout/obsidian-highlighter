@@ -4,7 +4,7 @@ import { Plugin, TFile } from "obsidian";
 import { HLedNote } from "src/HLedNote";
 import { Modal } from "src/Modal";
 import { HLNoteBuilder } from "src/HLNoteBuilder";
-import { FolderHighlightBox, MOCHignlightBox } from "src/HLBox";
+import { FolderHLBox, MOCHLBox } from "src/HLBox";
 import { HighlightParser } from "src/HighlightParser";
 
 export default class MyPlugin extends Plugin {
@@ -55,7 +55,7 @@ export default class MyPlugin extends Plugin {
 			name: "Find highlights on this HighlightBox",
 			callback: async () => {
 				const activeFile = this.app.workspace.getActiveFile();
-				const box = await FolderHighlightBox.findBox(
+				const box = await FolderHLBox.findBox(
 					this.app,
 					activeFile?.path || ""
 				);
@@ -74,11 +74,11 @@ export default class MyPlugin extends Plugin {
 			if (
 				!MOC ||
 				!(MOC instanceof TFile) ||
-				!MOCHignlightBox.isBox(this.app, MOC)
+				!MOCHLBox.isBox(this.app, MOC)
 			)
 				return;
 
-			const box = new MOCHignlightBox(this.app, MOC);
+			const box = new MOCHLBox(this.app, MOC);
 			const highlights = await box.getHighlights();
 			if (!highlights) return;
 			const builder = HLNoteBuilder.create(highlights);

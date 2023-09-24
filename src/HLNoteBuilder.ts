@@ -22,7 +22,6 @@ class Section {
 			const lines = item.split("\n@");
 			const content = lines[0];
 			const comment = lines[1];
-
 			return { content, comment };
 		});
 	}
@@ -52,7 +51,7 @@ export class HLNoteBuilder {
 		const section = this.sections.find(
 			(section) => section.title === sectionTitle
 		);
-		if(!section) {
+		if (!section) {
 			this.sections.push(new Section(`# ${sectionTitle}\n\n${content}`));
 			return;
 		}
@@ -68,8 +67,9 @@ export class HLNoteBuilder {
 		const parser = new HLNoteBuilder("");
 		highlights.forEach((highlight) => {
 			parser.addHighlight(
-				HighlightParser.Highlight(highlight.content), 
-				highlight.noteLink?.split("/").pop() || "");
+				HighlightParser.Highlight(highlight.content),
+				highlight.noteLink?.split("/").pop() || ""
+			);
 		});
 		return parser;
 	}

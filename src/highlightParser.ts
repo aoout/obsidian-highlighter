@@ -9,10 +9,8 @@ export class HighlightParser {
 		return text.replace(/^==(.+)==$/, "$1");
 	}
 	static switchHighlight(text: string) {
-		if (this.isHighlight(text)) {
-			return this.ReHighlight(text);
-		} else {
-			return this.Highlight(text);
-		}
+		return this.isHighlight(text)
+			? this.ReHighlight(text)
+			: this.Highlight(text);
 	}
 }
