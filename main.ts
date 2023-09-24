@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Plugin, TFile, TFolder } from "obsidian";
+import { Plugin, TFile} from "obsidian";
 import { HighlightParser } from "src/highlightParser";
 import { HighlightModal } from "src/highlightModal";
 import { ExportHignlightParser } from "src/exportHighlightParser";
-import { HighlightBox } from "src/HighlightBox";
+import { FolderHighlightBox, MOCHignlightBox } from "src/HighlightBox";
 
 export default class MyPlugin extends Plugin {
 	async onload() {
@@ -30,11 +30,11 @@ export default class MyPlugin extends Plugin {
 												/^==(.+)==$/,
 												"$1"
 											)
-									  )
+									)
 									: content.replace(
 											selectedText,
 											"==" + selectedText + "=="
-									  );
+									);
 								this.app.vault.modify(activeFile, newContent);
 							});
 					}
@@ -74,7 +74,7 @@ export default class MyPlugin extends Plugin {
 			name: "Find highlights on this HighlightBox",
 			callback: async () => {
 				const activeFile = this.app.workspace.getActiveFile();
-				const box = await HighlightBox.findBox(
+				const box = await FolderHighlightBox.findBox(
 					this.app,
 					activeFile?.path || ""
 				);
@@ -89,6 +89,42 @@ export default class MyPlugin extends Plugin {
 
 		this.app.workspace.on("file-open", async (file) => {
 			if (file && file.basename.includes("-highlights")) {
+				// 找到该file去掉-highlights后的文件
+				console.log(file.path);
+				const MOC = this.app.vault.getAbstractFileByPath(
+					file.path.replace("-highlights", "")
+				);
+				console.log(MOC?.path);
+				if (
+					MOC &&
+					MOC instanceof TFile &&
+					MOCHignlightBox.isBox(this.app, MOC)
+				) {
+					const box = new MOCHignlightBox(this.app, MOC);
+					const highlights = await box.getHighlights();
+					if (highlights) {
+						console.log(highlights);
+						const content = await this.app.vault.cachedRead(file);
+						if (highlights) {
+							const parser = new ExportHignlightParser("");
+							highlights.forEach((highlight) => {
+								parser.addHighlight(
+									"==" + highlight.content + "==",
+									highlight.noteLink?.split("/")[
+										highlight.noteLink?.split("/").length -
+											1
+									] || ""
+								);
+							});
+							const oldParser = new ExportHignlightParser(
+								content
+							);
+							parser.merge(oldParser);
+							this.app.vault.modify(file, parser.toString());
+							console.log("Highlights have been updated.");
+						}
+					}
+					/*
 				const folderNote = this.app.vault.getAbstractFileByPath(
 					file.path.replace("-highlights", "")
 				);
@@ -99,8 +135,8 @@ export default class MyPlugin extends Plugin {
 						folder instanceof TFolder &&
 						folder.name == folderNote.basename
 					) {
-						if (HighlightBox.isBox(this.app, folder.path)) {
-							const box = new HighlightBox(this.app, folder.path);
+						if (FolderHighlightBox.isBox(this.app, folder.path)) {
+							const box = new FolderHighlightBox(this.app, folder.path);
 							const highlights = await box.getHighlights();
 							// const highlights:Highlight[] = []
 							console.log(highlights);
@@ -127,6 +163,8 @@ export default class MyPlugin extends Plugin {
 							}
 						}
 					}
+				}
+				*/
 				}
 			}
 		});

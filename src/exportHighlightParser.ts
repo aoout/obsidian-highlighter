@@ -32,6 +32,7 @@ export class ExportHignlightParser {
 		this.content = content;
 		this.sections = [];
 		if (content) {
+			console.log(content)
 			content.split("\n").forEach((line) => {
 				if (line.match(/^# /)) {
 					this.sections.push(new Section(line));
