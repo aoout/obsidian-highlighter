@@ -1,7 +1,7 @@
 import { App, SuggestModal, TFile } from "obsidian";
-import { Highlight } from "./highlightParser";
+import { Highlight } from "./HLedNote";
 
-export class HighlightModal extends SuggestModal<Highlight> {
+export class Modal extends SuggestModal<Highlight> {
 	app: App;
 	highlight: Highlight[];
 	getSuggestions(query: string): Highlight[] | Promise<Highlight[]> {

@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-interface Highlight {
+import { HighlightParser } from "./HighlightParser";
+import { Highlight } from "./HLedNote";
+
+interface HighlightItem {
 	content: string;
 	comment: string | null;
 }
@@ -8,7 +11,7 @@ interface Highlight {
 class Section {
 	title: string;
 	content: string;
-	highlights: Highlight[];
+	highlights: HighlightItem[];
 	constructor(content: string) {
 		this.content = content;
 		this.title = content.split("\n")[0].replace(/^# /, "");
@@ -25,44 +28,53 @@ class Section {
 	}
 }
 
-export class ExportHignlightParser {
+export class HLNoteBuilder {
 	content: string;
 	sections: Section[];
 	constructor(content: string) {
 		this.content = content;
 		this.sections = [];
-		if (content) {
-			console.log(content)
-			content.split("\n").forEach((line) => {
-				if (line.match(/^# /)) {
-					this.sections.push(new Section(line));
-				} else {
-					const lastSection = this.sections[this.sections.length - 1];
-					this.sections[this.sections.length - 1] = new Section(
-						lastSection.content + "\n" + line
-					);
-				}
-			});
-		}
+		if (!content) return;
+		content.split("\n").forEach((line) => {
+			if (line.match(/^# /)) {
+				this.sections.push(new Section(line));
+			} else {
+				const lastSection = this.sections.pop();
+				if (!lastSection) return;
+				this.sections.push(
+					new Section(lastSection.content + "\n" + line)
+				);
+			}
+		});
 	}
 
 	addHighlight(content: string, sectionTitle: string) {
 		const section = this.sections.find(
 			(section) => section.title === sectionTitle
 		);
-		if (section) {
-			const highlight = section.highlights.find(
-				(highlight) => highlight.content == content
-			);
-			if (!highlight) {
-				section.highlights.push({ content, comment: null });
-			}
-		} else {
+		if(!section) {
 			this.sections.push(new Section(`# ${sectionTitle}\n\n${content}`));
+			return;
+		}
+		const highlight = section.highlights.find(
+			(highlight) => highlight.content == content
+		);
+		if (!highlight) {
+			section.highlights.push({ content, comment: null });
 		}
 	}
 
-	merge(highlightParser: ExportHignlightParser) {
+	static create(highlights: Highlight[]) {
+		const parser = new HLNoteBuilder("");
+		highlights.forEach((highlight) => {
+			parser.addHighlight(
+				HighlightParser.Highlight(highlight.content), 
+				highlight.noteLink?.split("/").pop() || "");
+		});
+		return parser;
+	}
+
+	mergeComment(highlightParser: HLNoteBuilder) {
 		highlightParser.sections.forEach((section) => {
 			const section2 = this.sections.find(
 				(section2) => section2.title === section.title

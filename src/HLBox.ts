@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { App, TFile, TFolder } from "obsidian";
-import { Highlight, HighlightParser } from "./highlightParser";
+import { Highlight, HLedNote } from "./HLedNote";
 
 class HighlightBox {
 	static tags: string[] = ["HighlightBox"];
@@ -91,7 +91,7 @@ export class FolderHighlightBox extends HighlightBox {
 			) {
 				// 读取file的内容
 				const content = await this.app.vault.cachedRead(file);
-				const highlights2 = new HighlightParser(content).highlights;
+				const highlights2 = new HLedNote(content).highlights;
 				// for 循环 为高亮添加 noteLink 属性
 				for (const highlight of highlights2) {
 					highlight.noteLink = file.path.split(".md")[0];
@@ -156,7 +156,7 @@ export class MOCHignlightBox extends HighlightBox {
 				);
 				if (file && file instanceof TFile) {
 					const content = await this.app.vault.cachedRead(file);
-					const highlights2 = new HighlightParser(content).highlights;
+					const highlights2 = new HLedNote(content).highlights;
 					for (const highlight of highlights2) {
 						highlight.noteLink = file.path.split(".md")[0];
 						highlights.push(highlight);
