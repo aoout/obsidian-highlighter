@@ -4,8 +4,7 @@
 	"version": "0.0.3",
 	"minAppVersion": "0.15.0",
 	"description": "Management Highlights in your vault.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
-	"isDesktopOnly": false
+	"author": "aoout",
+	"authorUrl": "https://github.com/aoout",
+	"isDesktopOnly": true
 }
