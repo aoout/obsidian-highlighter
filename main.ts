@@ -6,9 +6,14 @@ import { Modal } from "src/Modal";
 import { HLNoteBuilder } from "src/HLNoteBuilder";
 import { FolderHLBox, MOCHLBox } from "src/HLBox";
 import { HighlightParser } from "src/HighlightParser";
+import { DEFAULT_SETTINGS, HighlighterSettings } from "src/settings";
+import { HighlighterSettingsTab } from "src/settingsTab";
 
-export default class MyPlugin extends Plugin {
+export default class HighlighterPlugin extends Plugin {
+	settings: HighlighterSettings;
 	async onload() {
+		await this.loadSettings();
+		this.addSettingTab(new HighlighterSettingsTab(this.app, this));
 		this.addCommand({
 			id: "switch-highlighted-selected",
 			name: "Switch highlighted status on selected text",
@@ -55,7 +60,7 @@ export default class MyPlugin extends Plugin {
 			name: "Find highlights on this HighlightBox",
 			callback: async () => {
 				const activeFile = this.app.workspace.getActiveFile();
-				if(!activeFile) return;
+				if (!activeFile) return;
 				const box = await FolderHLBox.findBox(
 					this.app,
 					activeFile?.path
@@ -66,27 +71,50 @@ export default class MyPlugin extends Plugin {
 				new Modal(this.app, highlights).open();
 			},
 		});
+		this.addCommand({
+			id: "update-highlights-file",
+			name:"Update -hightlights file.",
+			callback: () => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if (!activeFile || !activeFile.basename.includes("-highlights") ) return;
+				this.updateHighlightsFile(activeFile);
+			}
+		})
 
 		this.app.workspace.on("file-open", async (file) => {
+			if (!this.settings.autoUpdate) return;
 			if (!file || !file.basename.includes("-highlights")) return;
-			const MOC = this.app.vault.getAbstractFileByPath(
-				file.path.replace("-highlights", "")
-			);
-			if (
-				!MOC ||
-				!(MOC instanceof TFile) ||
-				!MOCHLBox.isBox(this.app, MOC)
-			)
-				return;
-
-			const box = new MOCHLBox(this.app, MOC);
-			const highlights = await box.getHighlights();
-			if (!highlights) return;
-			const builder = HLNoteBuilder.create(highlights);
-			const content = await this.app.vault.cachedRead(file);
-			builder.mergeComment(new HLNoteBuilder(content));
-			this.app.vault.modify(file, builder.toString());
+			await this.updateHighlightsFile(file);
 		});
+	}
+
+	async updateHighlightsFile(file:TFile) {
+		const key = this.app.vault.getAbstractFileByPath(
+			file.path.replace("-highlights", "")
+		);
+		console.log(key);
+		if (!key || !(key instanceof TFile)) return;
+		const HLBox =
+			this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
+		const box = new HLBox(this.app, key);
+		const highlights = await box.getHighlights();
+		if (!highlights) return;
+		const builder = HLNoteBuilder.create(highlights);
+		const content = await this.app.vault.cachedRead(file);
+		builder.mergeComment(new HLNoteBuilder(content));
+		this.app.vault.modify(file, builder.toString());
+	}
+
+	async loadSettings(): Promise<void> {
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData()
+		);
+	}
+
+	async saveSettings(): Promise<void> {
+		await this.saveData(this.settings);
 	}
 
 	onunload() {}

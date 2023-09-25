@@ -11,11 +11,16 @@ export class FolderHLBox extends HLBox {
 	path: string;
 	name: string;
 
-	constructor(app: App, path: string) {
+	constructor(app: App, folderNote: TFile) {
+		if (
+			!folderNote.parent ||
+			!FolderHLBox.isBox(app, folderNote.parent.path)
+		)
+			return;
 		super();
 		this.app = app;
-		this.path = path;
-		this.name = path.substring(path.lastIndexOf("/") + 1);
+		this.path = folderNote.parent.path;
+		this.name = this.path.substring(this.path.lastIndexOf("/") + 1);
 	}
 
 	static async findBox(
@@ -25,7 +30,14 @@ export class FolderHLBox extends HLBox {
 		let path = notePath;
 		while (path != "") {
 			if (FolderHLBox.isBox(app, path)) {
-				return new FolderHLBox(app, path);
+				const file = app.vault.getAbstractFileByPath(
+					path +
+						"/" +
+						path.substring(path.lastIndexOf("/") + 1) +
+						".md"
+				);
+				if (!file || !(file instanceof TFile)) return;
+				return new FolderHLBox(app, file);
 			}
 			path = path.substring(0, path.lastIndexOf("/"));
 		}
@@ -95,6 +107,7 @@ export class MOCHLBox extends HLBox {
 	app: App;
 	MOC: TFile;
 	constructor(app: App, MOC: TFile) {
+		if (!MOCHLBox.isBox(app, MOC)) return;
 		super();
 		this.app = app;
 		this.MOC = MOC;
