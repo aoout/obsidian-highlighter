@@ -1,7 +1,9 @@
 import { App, SuggestModal, TFile } from "obsidian";
 import { Highlight } from "./HLedNote";
+import HighlighterPlugin from "main";
 
 export class Modal extends SuggestModal<Highlight> {
+	plugin:HighlighterPlugin
 	app: App;
 	highlight: Highlight[];
 	emptyStateText = "No highlights found.";
@@ -24,15 +26,7 @@ export class Modal extends SuggestModal<Highlight> {
 				item.noteLink + ".md"
 			);
 			if (file && file instanceof TFile) {
-				this.app.workspace
-					.getLeaf()
-					.openFile(file)
-					.then(() => {
-						this.app.workspace.activeEditor?.editor?.scrollIntoView(
-							item.range,
-							true
-						);
-					});
+				this.plugin.jumpTo(file, item.range);
 			}
 		} else {
 			this.app.workspace.activeEditor?.editor?.scrollIntoView(
@@ -43,8 +37,9 @@ export class Modal extends SuggestModal<Highlight> {
 
 		return true;
 	}
-	constructor(app: App, highlights: Highlight[]) {
+	constructor(plugin:HighlighterPlugin,app: App, highlights: Highlight[]) {
 		super(app);
+		this.plugin = plugin;
 		this.app = app;
 		this.highlight = highlights;
 	}

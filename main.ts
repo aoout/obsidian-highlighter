@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Notice, Plugin, TFile } from "obsidian";
+import { EditorRange, Notice, Plugin, TFile } from "obsidian";
 import { HLedNote } from "src/HLedNote";
 import { Modal } from "src/Modal";
 import { HLNoteBuilder } from "src/HLNoteBuilder";
@@ -48,8 +48,11 @@ export default class HighlighterPlugin extends Plugin {
 			callback: async () => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile) return;
-				const highlights = await new HLedNote(this.app,activeFile).getHighlights()
-				new Modal(this.app, highlights).open();
+				const highlights = await new HLedNote(
+					this.app,
+					activeFile
+				).getHighlights();
+				new Modal(this, this.app, highlights).open();
 			},
 		});
 		this.addCommand({
@@ -72,18 +75,22 @@ export default class HighlighterPlugin extends Plugin {
 			name: "Jump between source and highlights",
 			callback: () => {
 				const activeFile = this.app.workspace.getActiveFile();
-				if (!activeFile) return;
-				const seclection = this.app.workspace.activeEditor?.editor?.getSelection()
-				if(!seclection) return;
-				if(!HighlightParser.isHighlight(seclection)) return;
+				const seclection =
+					this.app.workspace.activeEditor?.editor?.getSelection();
+				if (
+					!activeFile ||
+					!seclection ||
+					!HighlightParser.isHighlight(seclection)
+				)
+					return;
 				const seclectedText = HighlightParser.ReHighlight(seclection);
 				if (activeFile.basename.includes("-highlights")) {
-					this.jumpToSource(activeFile,seclectedText);
+					this.jumpToSource(activeFile, seclectedText);
 				} else {
-					this.jumpToHighlights(activeFile,seclectedText);
+					this.jumpToHighlights(activeFile, seclectedText);
 				}
-			}
-		})
+			},
+		});
 		this.addRibbonIcon("search", "search highlights in box", async () => {
 			await this.searchHighlightsinBox();
 		});
@@ -114,19 +121,18 @@ export default class HighlighterPlugin extends Plugin {
 		}
 		const highlights = await box.getHighlights();
 		if (!highlights) return;
-		console.log("highlights",highlights)
-		new Modal(this.app, highlights).open();
+		console.log("highlights", highlights);
+		new Modal(this, this.app, highlights).open();
 	}
 
 	async updateHighlightsFile(file: TFile | null) {
-		if (!file || !file.basename.includes("-highlights")){
+		if (!file || !file.basename.includes("-highlights")) {
 			new Notice("This file is not a highlights file.");
 			return;
 		}
 		const key = this.app.vault.getAbstractFileByPath(
 			file.path.replace("-highlights", "")
 		);
-		console.log(key);
 		if (!key || !(key instanceof TFile)) return;
 		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
 		const box = new HLBox(this.app, key);
@@ -139,51 +145,51 @@ export default class HighlighterPlugin extends Plugin {
 		new Notice("Highlights updated.");
 	}
 
-	async jumpToSource(activeFile:TFile,seclectedText: string) {
+	async jumpToSource(activeFile: TFile, seclectedText: string) {
 		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
 		const key = this.app.vault.getAbstractFileByPath(
 			activeFile.path.replace("-highlights", "")
 		);
-		if(!key || !(key instanceof TFile)) return;
-		const box = new HLBox(this.app,key);
-		if(!box) return;
+		if (!key || !(key instanceof TFile)) return;
+		const box = new HLBox(this.app, key);
+		if (!box) return;
 		const highlights = await box.getHighlights();
-		if(!highlights) return;
+		if (!highlights) return;
 		const target = highlights.find((h) => h.content == seclectedText);
-		if(!target) return;
-		const file = this.app.vault.getAbstractFileByPath(target.noteLink + ".md");
-		if(!file || !(file instanceof TFile)) return;
-		this.app.workspace
-			.getLeaf()
-			.openFile(file)
-			.then(() => {
-				this.app.workspace.activeEditor?.editor?.scrollIntoView(
-					target.range,
-					true
-				);
-			});
+		if (!target) return;
+		const file = this.app.vault.getAbstractFileByPath(
+			target.noteLink + ".md"
+		);
+		if (!file || !(file instanceof TFile)) return;
+		this.jumpTo(file, target.range);
 	}
 
-	async jumpToHighlights(activeFile:TFile,seclectedText: string) {
+	async jumpToHighlights(activeFile: TFile, seclectedText: string) {
 		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
 		const box = await HLBox.findBox(this.app, activeFile?.path);
-		if(!box) return;
-		const highlightsFile = box.highlightsFile;
-		const highlights = await new HLedNote(this.app,highlightsFile).getHighlights();
-		if(!highlights) return;
-		console.log("seclectedText",seclectedText);
-		console.log("highlights",highlights);
+		if (!box) return;
+		const highlights = await new HLedNote(
+			this.app,
+			box.highlightsFile
+		).getHighlights();
+		if (!highlights) return;
 		const target = highlights.find((h) => h.content == seclectedText);
-		if(!target) return;
-		console.log("target",target);
-		const file = this.app.vault.getAbstractFileByPath(target.noteLink + ".md");
-		if(!file || !(file instanceof TFile)) return;
+		if (!target) return;
+		console.log("target", target);
+		const file = this.app.vault.getAbstractFileByPath(
+			target.noteLink + ".md"
+		);
+		if (!file || !(file instanceof TFile)) return;
+		this.jumpTo(file, target.range);
+	}
+
+	async jumpTo(file: TFile, range: EditorRange) {
 		this.app.workspace
 			.getLeaf()
 			.openFile(file)
 			.then(() => {
 				this.app.workspace.activeEditor?.editor?.scrollIntoView(
-					target.range,
+					range,
 					true
 				);
 			});
