@@ -1,7 +1,7 @@
 {
 	"id": "highlighter",
 	"name": "Highlighter",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"minAppVersion": "0.15.0",
 	"description": "Management Highlights in your vault.",
 	"author": "aoout",
