@@ -84,6 +84,7 @@ export default class HighlighterPlugin extends Plugin {
 
 		this.app.workspace.on("file-open", async (file) => {
 			if (!this.settings.autoUpdate) return;
+			if (!file || !file.basename.includes("-highlights")) return;
 			await this.updateHighlightsFile(file);
 		});
 	}
