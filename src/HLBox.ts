@@ -10,6 +10,7 @@ export class FolderHLBox extends HLBox {
 	app: App;
 	path: string;
 	name: string;
+	highlightsFile : TFile;
 
 	constructor(app: App, folderNote: TFile) {
 		if (
@@ -21,6 +22,9 @@ export class FolderHLBox extends HLBox {
 		this.app = app;
 		this.path = folderNote.parent.path;
 		this.name = this.path.substring(this.path.lastIndexOf("/") + 1);
+		this.highlightsFile = this.app.vault.getAbstractFileByPath(
+			this.path + "/" + this.name + "-highlights.md"
+		) as TFile;
 	}
 
 	static async findBox(
@@ -92,12 +96,9 @@ export class FolderHLBox extends HLBox {
 				file.extension == "md" &&
 				!file.name.includes("-highlights")
 			) {
-				const content = await this.app.vault.cachedRead(file);
-				const highlights2 = new HLedNote(content).highlights;
-				for (const highlight of highlights2) {
-					highlight.noteLink = file.path.split(".md")[0];
-					highlights.push(highlight);
-				}
+				const highlights2 = await new HLedNote(this.app, file).getHighlights();
+				highlights.push(...highlights2);
+
 			}
 		}
 	}
@@ -106,11 +107,15 @@ export class FolderHLBox extends HLBox {
 export class MOCHLBox extends HLBox {
 	app: App;
 	MOC: TFile;
+	highlightsFile : TFile;
 	constructor(app: App, MOC: TFile) {
 		if (!MOCHLBox.isBox(app, MOC)) return;
 		super();
 		this.app = app;
 		this.MOC = MOC;
+		this.highlightsFile = this.app.vault.getAbstractFileByPath(
+			this.MOC.path.replace(".md", "-highlights.md")
+		) as TFile;
 	}
 	static findBox(app: App, notePath: string): MOCHLBox | undefined {
 		const file = app.vault.getAbstractFileByPath(notePath);
@@ -143,18 +148,15 @@ export class MOCHLBox extends HLBox {
 	async getHighlights() {
 		const highlights: Highlight[] = [];
 		const links = this.app.metadataCache.getFileCache(this.MOC)?.links;
+		console.log(links)
 		if (!links) return;
 		for (const link of links) {
 			const file = this.app.vault.getAbstractFileByPath(
 				link.link + ".md"
 			);
 			if (!file || !(file instanceof TFile)) continue;
-			const content = await this.app.vault.cachedRead(file);
-			const highlights2 = new HLedNote(content).highlights;
-			for (const highlight of highlights2) {
-				highlight.noteLink = file.path.split(".md")[0];
-				highlights.push(highlight);
-			}
+			const highlights2 = await new HLedNote(this.app, file).getHighlights();
+			highlights.push(...highlights2);
 		}
 		return highlights;
 	}

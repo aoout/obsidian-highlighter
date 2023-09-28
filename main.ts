@@ -43,16 +43,13 @@ export default class HighlighterPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
-			id: "find-highlights",
-			name: "Find highlights on this file",
+			id: "search-highlights",
+			name: "Search highlights on this file",
 			callback: async () => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile) return;
-				this.app.vault.cachedRead(activeFile).then((content) => {
-					const parser = new HLedNote(content);
-					const highlights = parser.highlights;
-					new Modal(this.app, highlights).open();
-				});
+				const highlights = await new HLedNote(this.app,activeFile).getHighlights()
+				new Modal(this.app, highlights).open();
 			},
 		});
 		this.addCommand({
@@ -70,6 +67,23 @@ export default class HighlighterPlugin extends Plugin {
 				this.updateHighlightsFile(activeFile);
 			},
 		});
+		this.addCommand({
+			id: "jump-between-source-and-highlights",
+			name: "Jump between source and highlights",
+			callback: () => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if (!activeFile) return;
+				const seclection = this.app.workspace.activeEditor?.editor?.getSelection()
+				if(!seclection) return;
+				if(!HighlightParser.isHighlight(seclection)) return;
+				const seclectedText = HighlightParser.ReHighlight(seclection);
+				if (activeFile.basename.includes("-highlights")) {
+					this.jumpToSource(activeFile,seclectedText);
+				} else {
+					this.jumpToHighlights(activeFile,seclectedText);
+				}
+			}
+		})
 		this.addRibbonIcon("search", "search highlights in box", async () => {
 			await this.searchHighlightsinBox();
 		});
@@ -92,13 +106,15 @@ export default class HighlighterPlugin extends Plugin {
 	async searchHighlightsinBox() {
 		const activeFile = this.app.workspace.getActiveFile();
 		if (!activeFile) return;
-		const box = await FolderHLBox.findBox(this.app, activeFile?.path);
+		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
+		const box = await HLBox.findBox(this.app, activeFile?.path);
 		if (!box) {
 			new Notice("This file is not in a highlight box.");
 			return;
 		}
 		const highlights = await box.getHighlights();
 		if (!highlights) return;
+		console.log("highlights",highlights)
 		new Modal(this.app, highlights).open();
 	}
 
@@ -121,6 +137,56 @@ export default class HighlighterPlugin extends Plugin {
 		builder.mergeComment(new HLNoteBuilder(content));
 		this.app.vault.modify(file, builder.toString());
 		new Notice("Highlights updated.");
+	}
+
+	async jumpToSource(activeFile:TFile,seclectedText: string) {
+		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
+		const key = this.app.vault.getAbstractFileByPath(
+			activeFile.path.replace("-highlights", "")
+		);
+		if(!key || !(key instanceof TFile)) return;
+		const box = new HLBox(this.app,key);
+		if(!box) return;
+		const highlights = await box.getHighlights();
+		if(!highlights) return;
+		const target = highlights.find((h) => h.content == seclectedText);
+		if(!target) return;
+		const file = this.app.vault.getAbstractFileByPath(target.noteLink + ".md");
+		if(!file || !(file instanceof TFile)) return;
+		this.app.workspace
+			.getLeaf()
+			.openFile(file)
+			.then(() => {
+				this.app.workspace.activeEditor?.editor?.scrollIntoView(
+					target.range,
+					true
+				);
+			});
+	}
+
+	async jumpToHighlights(activeFile:TFile,seclectedText: string) {
+		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
+		const box = await HLBox.findBox(this.app, activeFile?.path);
+		if(!box) return;
+		const highlightsFile = box.highlightsFile;
+		const highlights = await new HLedNote(this.app,highlightsFile).getHighlights();
+		if(!highlights) return;
+		console.log("seclectedText",seclectedText);
+		console.log("highlights",highlights);
+		const target = highlights.find((h) => h.content == seclectedText);
+		if(!target) return;
+		console.log("target",target);
+		const file = this.app.vault.getAbstractFileByPath(target.noteLink + ".md");
+		if(!file || !(file instanceof TFile)) return;
+		this.app.workspace
+			.getLeaf()
+			.openFile(file)
+			.then(() => {
+				this.app.workspace.activeEditor?.editor?.scrollIntoView(
+					target.range,
+					true
+				);
+			});
 	}
 
 	async loadSettings(): Promise<void> {

@@ -1,4 +1,4 @@
-import { EditorRange } from "obsidian";
+import { App, EditorRange, TFile } from "obsidian";
 
 export interface Highlight {
 	content: string;
@@ -7,11 +7,17 @@ export interface Highlight {
 }
 
 export class HLedNote {
-	highlights: Highlight[];
-	constructor(content: string) {
-		this.highlights = [];
+	app:App;
+	file:TFile;
+	constructor(app:App,file:TFile) {
+		this.app = app;
+		this.file = file;
+
+	}
+	async getHighlights():Promise<Highlight[]> {
+		const highlights = [];
 		const regex = /==([^=]+)==/g;
-		
+		const content = await this.app.vault.cachedRead(this.file);
 		let match = regex.exec(content);
 		while (match) {
 			const start = match.index;
@@ -33,9 +39,13 @@ export class HLedNote {
 					from: { line: startline, ch: startch },
 					to: { line: endline, ch: endch },
 				},
+				noteLink: this.file.path.split(".md")[0],
 			};
-			this.highlights.push(highlight);
+			console.log(highlight.noteLink);
+			highlights.push(highlight);
 			match = regex.exec(content);
 		}
+		return highlights;
+
 	}
 }
