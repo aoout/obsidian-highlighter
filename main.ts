@@ -1,6 +1,6 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Plugin, TFile } from "obsidian";
+import { Notice, Plugin, TFile } from "obsidian";
 import { HLedNote } from "src/HLedNote";
 import { Modal } from "src/Modal";
 import { HLNoteBuilder } from "src/HLNoteBuilder";
@@ -56,46 +56,62 @@ export default class HighlighterPlugin extends Plugin {
 			},
 		});
 		this.addCommand({
-			id: "find-highlights-from-box",
-			name: "Find highlights on this HighlightBox",
+			id: "search-highlights-from-box",
+			name: "Search highlights on this HighlightBox",
 			callback: async () => {
-				const activeFile = this.app.workspace.getActiveFile();
-				if (!activeFile) return;
-				const box = await FolderHLBox.findBox(
-					this.app,
-					activeFile?.path
-				);
-				if (!box) return;
-				const highlights = await box.getHighlights();
-				if (!highlights) return;
-				new Modal(this.app, highlights).open();
+				await this.searchHighlightsinBox();
 			},
 		});
 		this.addCommand({
 			id: "update-highlights-file",
-			name:"Update -hightlights file.",
+			name: "Update -hightlights file.",
 			callback: () => {
 				const activeFile = this.app.workspace.getActiveFile();
-				if (!activeFile || !activeFile.basename.includes("-highlights") ) return;
 				this.updateHighlightsFile(activeFile);
+			},
+		});
+		this.addRibbonIcon("search", "search highlights in box", async () => {
+			await this.searchHighlightsinBox();
+		});
+		this.addRibbonIcon(
+			"rotate-ccw",
+			"update -highlights file",
+			async () => {
+				const activeFile = this.app.workspace.getActiveFile();
+				await this.updateHighlightsFile(activeFile);
 			}
-		})
+		);
 
 		this.app.workspace.on("file-open", async (file) => {
 			if (!this.settings.autoUpdate) return;
-			if (!file || !file.basename.includes("-highlights")) return;
 			await this.updateHighlightsFile(file);
 		});
 	}
 
-	async updateHighlightsFile(file:TFile) {
+	async searchHighlightsinBox() {
+		const activeFile = this.app.workspace.getActiveFile();
+		if (!activeFile) return;
+		const box = await FolderHLBox.findBox(this.app, activeFile?.path);
+		if (!box) {
+			new Notice("This file is not in a highlight box.");
+			return;
+		}
+		const highlights = await box.getHighlights();
+		if (!highlights) return;
+		new Modal(this.app, highlights).open();
+	}
+
+	async updateHighlightsFile(file: TFile | null) {
+		if (!file || !file.basename.includes("-highlights")){
+			new Notice("This file is not a highlights file.");
+			return;
+		}
 		const key = this.app.vault.getAbstractFileByPath(
 			file.path.replace("-highlights", "")
 		);
 		console.log(key);
 		if (!key || !(key instanceof TFile)) return;
-		const HLBox =
-			this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
+		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
 		const box = new HLBox(this.app, key);
 		const highlights = await box.getHighlights();
 		if (!highlights) return;
@@ -103,6 +119,7 @@ export default class HighlighterPlugin extends Plugin {
 		const content = await this.app.vault.cachedRead(file);
 		builder.mergeComment(new HLNoteBuilder(content));
 		this.app.vault.modify(file, builder.toString());
+		new Notice("Highlights updated.");
 	}
 
 	async loadSettings(): Promise<void> {

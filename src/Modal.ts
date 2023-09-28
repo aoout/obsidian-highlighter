@@ -4,6 +4,7 @@ import { Highlight } from "./HLedNote";
 export class Modal extends SuggestModal<Highlight> {
 	app: App;
 	highlight: Highlight[];
+	emptyStateText = "No highlights found.";
 	getSuggestions(query: string): Highlight[] | Promise<Highlight[]> {
 		return this.highlight.filter((h) => h.content.includes(query));
 	}
