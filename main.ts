@@ -1,19 +1,22 @@
 /* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { EditorRange, Notice, Plugin, TFile } from "obsidian";
-import { HLedNote } from "src/HLedNote";
+import { Notice, Plugin, TFile } from "obsidian";
 import { Modal } from "src/Modal";
 import { HLNoteBuilder } from "src/HLNoteBuilder";
-import { FolderHLBox, MOCHLBox } from "src/HLBox";
+import { Highlight, FolderHLBox, MOCHLBox } from "src/HLBox";
 import { HighlightParser } from "src/HighlightParser";
 import { DEFAULT_SETTINGS, HighlighterSettings } from "src/settings";
 import { HighlighterSettingsTab } from "src/settingsTab";
+import { PluginApi } from "src/ExtendedObsidianApi/PluginApi";
 
 export default class HighlighterPlugin extends Plugin {
+	api: PluginApi;
 	settings: HighlighterSettings;
 	async onload() {
+		this.api = new PluginApi(this);
 		await this.loadSettings();
 		this.addSettingTab(new HighlighterSettingsTab(this.app, this));
+		
 		this.addCommand({
 			id: "switch-highlighted-selected",
 			name: "Switch highlighted status on selected text",
@@ -22,24 +25,27 @@ export default class HighlighterPlugin extends Plugin {
 				const editor = this.app.workspace.activeEditor?.editor;
 				if (!activeFile || !editor) return;
 				const selectedText = editor.getSelection();
-				const content = await this.app.vault.cachedRead(activeFile);
-				const content2 = content.replace(
-					selectedText,
-					HighlightParser.switchHighlight(selectedText)
+				const content = await this.api.readFile(activeFile);
+				this.api.writeFile(
+					activeFile,
+					content.replace(
+						selectedText,
+						HighlightParser.switchHighlight(selectedText)
+					)
 				);
-				this.app.vault.modify(activeFile, content2);
 			},
 		});
 		this.addCommand({
 			id: "clear-highlights",
 			name: "Clear hightlights on this file",
-			callback: () => {
+			callback: async () => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile) return;
-				this.app.vault.cachedRead(activeFile).then((content) => {
-					const newContent = content.replace(/==(.+)==/g, "$1");
-					this.app.vault.modify(activeFile, newContent);
-				});
+				const content = await this.api.readFile(activeFile);
+				this.api.writeFile(
+					activeFile,
+					content.replace(/==(.+)==/g, "$1")
+				);
 			},
 		});
 		this.addCommand({
@@ -48,11 +54,8 @@ export default class HighlighterPlugin extends Plugin {
 			callback: async () => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile) return;
-				const highlights = await new HLedNote(
-					this.app,
-					activeFile
-				).getHighlights();
-				new Modal(this, this.app, highlights).open();
+				const highlights = await this.getHighlights(activeFile);
+				new Modal(this, highlights).open();
 			},
 		});
 		this.addCommand({
@@ -114,7 +117,7 @@ export default class HighlighterPlugin extends Plugin {
 		const activeFile = this.app.workspace.getActiveFile();
 		if (!activeFile) return;
 		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
-		const box = await HLBox.findBox(this.app, activeFile?.path);
+		const box = await HLBox.findBox(this, activeFile?.path);
 		if (!box) {
 			new Notice("This file is not in a highlight box.");
 			return;
@@ -122,7 +125,7 @@ export default class HighlighterPlugin extends Plugin {
 		const highlights = await box.getHighlights();
 		if (!highlights) return;
 		console.log("highlights", highlights);
-		new Modal(this, this.app, highlights).open();
+		new Modal(this, highlights).open();
 	}
 
 	async updateHighlightsFile(file: TFile | null) {
@@ -130,69 +133,58 @@ export default class HighlighterPlugin extends Plugin {
 			new Notice("This file is not a highlights file.");
 			return;
 		}
-		const key = this.app.vault.getAbstractFileByPath(
+		const key = this.api.getFilebyPath(
 			file.path.replace("-highlights", "")
 		);
-		if (!key || !(key instanceof TFile)) return;
+		if (!key) return;
 		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
-		const box = new HLBox(this.app, key);
+		const box = new HLBox(this, key);
 		const highlights = await box.getHighlights();
 		if (!highlights) return;
 		const builder = HLNoteBuilder.create(highlights);
-		const content = await this.app.vault.cachedRead(file);
+		const content = await this.api.readFile(file);
 		builder.mergeComment(new HLNoteBuilder(content));
-		this.app.vault.modify(file, builder.toString());
+		this.api.writeFile(file, builder.toString());
 		new Notice("Highlights updated.");
 	}
 
 	async jumpToSource(activeFile: TFile, seclectedText: string) {
 		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
-		const key = this.app.vault.getAbstractFileByPath(
+		const key = this.api.getFilebyPath(
 			activeFile.path.replace("-highlights", "")
 		);
-		if (!key || !(key instanceof TFile)) return;
-		const box = new HLBox(this.app, key);
+		if (!key) return;
+		const box = new HLBox(this, key);
 		if (!box) return;
 		const highlights = await box.getHighlights();
 		if (!highlights) return;
 		const target = highlights.find((h) => h.content == seclectedText);
 		if (!target) return;
-		const file = this.app.vault.getAbstractFileByPath(
-			target.noteLink + ".md"
-		);
-		if (!file || !(file instanceof TFile)) return;
-		this.jumpTo(file, target.range);
+		const file = this.api.getFilebyPath(target.sourcePath);
+		if (!file) return;
+		this.api.jumpTo(file, target.range);
 	}
 
 	async jumpToHighlights(activeFile: TFile, seclectedText: string) {
 		const HLBox = this.settings.boxType == "MOC" ? MOCHLBox : FolderHLBox;
-		const box = await HLBox.findBox(this.app, activeFile?.path);
+		const box = await HLBox.findBox(this, activeFile?.path);
 		if (!box) return;
-		const highlights = await new HLedNote(
-			this.app,
-			box.highlightsFile
-		).getHighlights();
+		const highlights = await this.getHighlights(box.highlightsFile);
 		if (!highlights) return;
 		const target = highlights.find((h) => h.content == seclectedText);
 		if (!target) return;
-		console.log("target", target);
-		const file = this.app.vault.getAbstractFileByPath(
-			target.noteLink + ".md"
-		);
-		if (!file || !(file instanceof TFile)) return;
-		this.jumpTo(file, target.range);
+		const file = this.api.getFilebyPath(target.sourcePath);
+		if (!file) return;
+		this.api.jumpTo(file, target.range);
 	}
 
-	async jumpTo(file: TFile, range: EditorRange) {
-		this.app.workspace
-			.getLeaf()
-			.openFile(file)
-			.then(() => {
-				this.app.workspace.activeEditor?.editor?.scrollIntoView(
-					range,
-					true
-				);
-			});
+	async getHighlights(file: TFile): Promise<Highlight[]> {
+		const snippets = await this.api.getHighlights(file);
+		const highlights = snippets as Highlight[];
+		highlights.forEach((h) => {
+			h.sourcePath = file.path;
+		});
+		return highlights;
 	}
 
 	async loadSettings(): Promise<void> {

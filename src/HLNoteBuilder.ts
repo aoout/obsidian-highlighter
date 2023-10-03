@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { HighlightParser } from "./HighlightParser";
-import { Highlight } from "./HLedNote";
+import { Highlight } from "./HLBox";
 
 interface HighlightItem {
 	content: string;
@@ -68,7 +68,7 @@ export class HLNoteBuilder {
 		highlights.forEach((highlight) => {
 			parser.addHighlight(
 				HighlightParser.Highlight(highlight.content),
-				highlight.noteLink?.split("/").pop() || ""
+				highlight.sourcePath?.split("/").pop() || ""
 			);
 		});
 		return parser;

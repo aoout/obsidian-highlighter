@@ -1,60 +1,68 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { App, TFile, TFolder } from "obsidian";
-import { Highlight, HLedNote } from "./HLedNote";
+import { EditorRange, TFile, TFolder } from "obsidian";
+import { ObsidianSnippet } from "./ExtendedObsidianApi/PluginApi";
+import HighlighterPlugin from "main";
+
+export interface Highlight extends ObsidianSnippet {
+	content: string;
+	range: EditorRange;
+	sourcePath: string;
+}
 
 class HLBox {
 	static tags: string[] = ["HighlightBox"];
 }
 
 export class FolderHLBox extends HLBox {
-	app: App;
+	plugin: HighlighterPlugin;
 	path: string;
 	name: string;
-	highlightsFile : TFile;
+	highlightsFile: TFile;
 
-	constructor(app: App, folderNote: TFile) {
+	constructor(plugin: HighlighterPlugin, folderNote: TFile) {
 		if (
 			!folderNote.parent ||
-			!FolderHLBox.isBox(app, folderNote.parent.path)
+			!FolderHLBox.isBox(plugin, folderNote.parent.path)
 		)
 			return;
 		super();
-		this.app = app;
+		this.plugin = plugin;
 		this.path = folderNote.parent.path;
 		this.name = this.path.substring(this.path.lastIndexOf("/") + 1);
-		this.highlightsFile = this.app.vault.getAbstractFileByPath(
+		this.highlightsFile = this.plugin.api.getFilebyPath(
 			this.path + "/" + this.name + "-highlights.md"
 		) as TFile;
 	}
 
 	static async findBox(
-		app: App,
+		plugin: HighlighterPlugin,
 		notePath: string
 	): Promise<FolderHLBox | undefined> {
 		let path = notePath;
 		while (path != "") {
-			if (FolderHLBox.isBox(app, path)) {
-				const file = app.vault.getAbstractFileByPath(
+			if (FolderHLBox.isBox(plugin, path)) {
+				const file = plugin.api.getFilebyPath(
 					path +
 						"/" +
 						path.substring(path.lastIndexOf("/") + 1) +
 						".md"
 				);
-				if (!file || !(file instanceof TFile)) return;
-				return new FolderHLBox(app, file);
+				if (!file) return;
+				return new FolderHLBox(plugin, file);
 			}
 			path = path.substring(0, path.lastIndexOf("/"));
 		}
 	}
 
-	static isBox(app: App, path: string): boolean | undefined {
+	static isBox(plugin: HighlighterPlugin, path: string): boolean | undefined {
 		const basename = path.substring(path.lastIndexOf("/") + 1);
-		const folderNote = app.vault.getAbstractFileByPath(
+		const folderNote = plugin.app.vault.getAbstractFileByPath(
 			path + "/" + basename + ".md"
 		);
 		if (folderNote && folderNote instanceof TFile) {
 			const tags =
-				app.metadataCache.getFileCache(folderNote)?.frontmatter?.tags;
+				plugin.app.metadataCache.getFileCache(folderNote)?.frontmatter
+					?.tags;
 			if (tags) {
 				for (const tag of tags) {
 					if (FolderHLBox.tags.includes(tag)) {
@@ -68,7 +76,7 @@ export class FolderHLBox extends HLBox {
 
 	async getHighlights(): Promise<Highlight[] | undefined> {
 		const highlights: Highlight[] = [];
-		const folder = this.app.vault.getAbstractFileByPath(this.path);
+		const folder = this.plugin.app.vault.getAbstractFileByPath(this.path);
 		if (folder && folder instanceof TFolder) {
 			await this.getHighlightsRecursively(folder, highlights);
 			return highlights;
@@ -96,47 +104,42 @@ export class FolderHLBox extends HLBox {
 				file.extension == "md" &&
 				!file.name.includes("-highlights")
 			) {
-				const highlights2 = await new HLedNote(this.app, file).getHighlights();
+				const highlights2 = await this.plugin.getHighlights(file);
 				highlights.push(...highlights2);
-
 			}
 		}
 	}
 }
 
 export class MOCHLBox extends HLBox {
-	app: App;
+	plugin: HighlighterPlugin;
 	MOC: TFile;
-	highlightsFile : TFile;
-	constructor(app: App, MOC: TFile) {
-		if (!MOCHLBox.isBox(app, MOC)) return;
+	highlightsFile: TFile;
+	constructor(plugin: HighlighterPlugin, MOC: TFile) {
+		if (!MOCHLBox.isBox(plugin, MOC)) return;
 		super();
-		this.app = app;
+		this.plugin = plugin;
 		this.MOC = MOC;
-		this.highlightsFile = this.app.vault.getAbstractFileByPath(
+		this.highlightsFile = this.plugin.api.getFilebyPath(
 			this.MOC.path.replace(".md", "-highlights.md")
 		) as TFile;
 	}
-	static findBox(app: App, notePath: string): MOCHLBox | undefined {
-		const file = app.vault.getAbstractFileByPath(notePath);
-		if (!file || !(file instanceof TFile)) return;
-		// @ts-ignore
-		const backlinks = app.metadataCache.getBacklinksForFile(file);
-		const backlinksAsFiles = Object.keys(backlinks.data)
-			.filter((pathAsKey) => pathAsKey !== file.path)
-			.map((pathAsKey) => app.vault.getAbstractFileByPath(pathAsKey));
-		const filteredFiles = backlinksAsFiles.filter((file2) => {
-			if (file2 instanceof TFile) {
-				return MOCHLBox.isBox(app, file2);
-			}
-		});
-		const MOC = filteredFiles[0];
-		if (MOC && MOC instanceof TFile) {
-			return new MOCHLBox(app, MOC);
+	static findBox(
+		plugin: HighlighterPlugin,
+		notePath: string
+	): MOCHLBox | undefined {
+		const file = plugin.api.getFilebyPath(notePath);
+		if (!file) return;
+		const linkedTofiles = plugin.api.getLinkedTo(file);
+		const MOC = linkedTofiles.filter((item) =>
+			MOCHLBox.isBox(plugin, item)
+		)[0];
+		if (MOC) {
+			return new MOCHLBox(plugin, MOC);
 		}
 	}
-	static isBox(app: App, file: TFile): boolean {
-		const tags = app.metadataCache.getFileCache(file)?.frontmatter?.tags;
+	static isBox(plugin: HighlighterPlugin, file: TFile): boolean {
+		const tags = plugin.api.getTags(file);
 		if (!tags) return false;
 		for (const tag of tags) {
 			if (MOCHLBox.tags.includes(tag)) {
@@ -147,17 +150,14 @@ export class MOCHLBox extends HLBox {
 	}
 	async getHighlights() {
 		const highlights: Highlight[] = [];
-		const links = this.app.metadataCache.getFileCache(this.MOC)?.links;
-		console.log(links)
-		if (!links) return;
-		for (const link of links) {
-			const file = this.app.vault.getAbstractFileByPath(
-				link.link + ".md"
-			);
-			if (!file || !(file instanceof TFile)) continue;
-			const highlights2 = await new HLedNote(this.app, file).getHighlights();
-			highlights.push(...highlights2);
+		const linkToFiles = this.plugin.api.getLinkTo(this.MOC);
+		if (!linkToFiles) return;
+
+		for (const file of linkToFiles) {
+			if(!(file instanceof TFile)) continue;
+			highlights.push(...(await this.plugin.getHighlights(file)));
 		}
+		
 		return highlights;
 	}
 }
