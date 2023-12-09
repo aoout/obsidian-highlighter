@@ -2,48 +2,23 @@
 
 manage, display the highlights, and comment them in a elegant way.
 
-## ⚙️ Usage
+## Usage
 
-## 📥 Installation
+> [!warnning]
+> It's still early days for this plugin, I suggest you just try using it with the [epub importer](https://github.com/aoout/obsidian-epub-importer) to highlight books and manage higlights.
 
-- [ ] From Obsidian's community plugins
-- [x] Using BRAT with `https://github.com//highlighter`
-- [x] From the release page:
-- Download the latest release
-- Unzip `highlighter.zip` in `.obsidian/plugins/` path
-- In Obsidian settings, reload the plugin
-- Enable the plugin
+### With Epub Import
 
-## 🤖 Developing
+When **granularity** is greater than 0, the book chapter notes will be scattered in a folder. In this case, all these notes are called an **HighlightBox**.
 
-To make changes to this plugin, first ensure you have the dependencies installed.
+So when your activeNote is one of the notes, you are in this HighlightBox, and you can search all the highlights of this book through the `Search highlights in current HighlightBox` command.
 
-```
-npm install
-```
+![](assets/image1.png)
 
-To start building the plugin with what mode enabled run the following command:
+Moreover, when you are in a HighlightBox, by running the `Update highlights file` command, you can generate a **highlights.md** file, located in the root directory of the HighlightBox.
 
-```
-npm run dev
-```
+![](assets/image2.png)
 
-> **Note**
-> If you haven't already installed the hot-reload-plugin you'll be prompted to. You need to enable that plugin in your obsidian vault before hot-reloading will start. You might need to refresh your plugin list for it to show up.
-> To start a release build run the following command:
+If you want to comment a highlight, you can type an @ symbol and then write the comment on a new line. If your input conforms to the format, your comments will be retained when the `Update highlights file` command updates the highlights.md file.
 
-```
-npm run build
-```
-
-> **Note**
-> You can use the `.env` file with adding the key `VAULT_DEV` to specify the path to your Obsidian (development) vault. This will allow you to test your plugin without specify each times the path to the vault.
-
-### 📤 Export
-
-You can use the `npm run export` command to export your plugin to your Obsidian Main Vault. To do that, you need the `.env` file with the following content:
-
-```env
-VAULT="path/to/your/obsidian/vault"
-VAULT_DEV="path/to/your/dev/vault"
-```
+![](assets/image3.png)

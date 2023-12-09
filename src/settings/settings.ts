@@ -5,5 +5,5 @@ export interface HighlighterSettings {
 
 export const DEFAULT_SETTINGS: HighlighterSettings = {
 	boxTags: ["HighlightBox"],
-	boxType: "Folder",
+	boxType: "MOC",
 };
