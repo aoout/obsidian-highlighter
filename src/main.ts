@@ -1,4 +1,4 @@
-import { Plugin,EditorRange, TFile} from "obsidian";
+import { Plugin, EditorRange, TFile } from "obsidian";
 import { DEFAULT_SETTINGS, HighlighterSettings } from "./settings/settings";
 import { HighlightBox } from "./lib/HighlightBox";
 import { HighlighterModal } from "./HighlighterModal";
@@ -8,9 +8,8 @@ import path from "path";
 import { HighlightsBuilder } from "./lib/highlightsBuilder";
 
 export default class HighlighterPlugin extends Plugin {
-	settings:HighlighterSettings;
+	settings: HighlighterSettings;
 	async onload() {
-
 		console.log("Plugin Highlighter loaded.");
 		await this.loadSettings();
 		this.addSettingTab(new HighlighterSettingsTab(this.app, this));
@@ -18,19 +17,15 @@ export default class HighlighterPlugin extends Plugin {
 			id: "search-highlights-in-current-note",
 			name: "Search highlights in current note",
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			checkCallback:(checking) => {
+			checkCallback: (checking) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile) return false;
 				if (checking) return true;
-				this.app.vault.cachedRead(activeFile).then((content:string)=>{
-					const highlights = getHighlights(content,activeFile.path);
-					new HighlighterModal(
-						this.app,
-						highlights,
-						(highlight:highlight)=>{
-							this.jumpToHighlight(highlight);
-						}
-					).open();
+				this.app.vault.cachedRead(activeFile).then((content: string) => {
+					const highlights = getHighlights(content, activeFile.path);
+					new HighlighterModal(this.app, highlights, (highlight: highlight) => {
+						this.jumpToHighlight(highlight);
+					}).open();
 				});
 				return true;
 			},
@@ -38,18 +33,20 @@ export default class HighlighterPlugin extends Plugin {
 		this.addCommand({
 			id: "search-highlights-in-current-HighlightBox",
 			name: "Search highlights in current HighlightBox",
-			checkCallback:(checking:boolean) =>{
+			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile) return false;
-				const box = HighlightBox.type(this.settings.boxType).findBox(this.app,activeFile.path,this.settings.boxTags);
-				if(!box) return false;
+				const box = HighlightBox.type(this.settings.boxType).findBox(
+					this.app,
+					activeFile.path,
+					this.settings.boxTags
+				);
+				if (!box) return false;
 				if (checking) return true;
-				box.getHighlights().then((highlights:highlight[])=>{
-					new HighlighterModal(this.app,
-						highlights,
-						(highlight:highlight)=>{
-							this.jumpToHighlight(highlight);
-						}).open();
+				box.getHighlights().then((highlights: highlight[]) => {
+					new HighlighterModal(this.app, highlights, (highlight: highlight) => {
+						this.jumpToHighlight(highlight);
+					}).open();
 				});
 				return true;
 			},
@@ -57,24 +54,31 @@ export default class HighlighterPlugin extends Plugin {
 		this.addCommand({
 			id: "update-highlights-file",
 			name: "Update highlights file",
-			checkCallback:(checking:boolean) =>{
+			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile) return false;
-				const box = HighlightBox.type(this.settings.boxType).findBox(this.app,activeFile.path,this.settings.boxTags);
-				if(!box) return false;
+				const box = HighlightBox.type(this.settings.boxType).findBox(
+					this.app,
+					activeFile.path,
+					this.settings.boxTags
+				);
+				if (!box) return false;
 				if (checking) return true;
 				const folder = path.dirname(box.path);
 				const highlightsPath = folder + "/" + "highlights.md";
 				const highlightsFile = this.app.vault.getAbstractFileByPath(highlightsPath);
-				box.getHighlights().then((highlights:highlight[])=>{
+				box.getHighlights().then((highlights: highlight[]) => {
 					const map = HighlightsBuilder.highlights2map(highlights);
-					if(!highlightsFile){
-						this.app.vault.create(highlightsPath,HighlightsBuilder.map2markdown(map));
-					}else{
-						this.app.vault.read(highlightsFile as TFile).then((content:string)=>{
+					if (!highlightsFile) {
+						this.app.vault.create(highlightsPath, HighlightsBuilder.map2markdown(map));
+					} else {
+						this.app.vault.read(highlightsFile as TFile).then((content: string) => {
 							const mapOld = HighlightsBuilder.markdown2map(content);
-							const mapNew = HighlightsBuilder.mergeComments(mapOld,map);
-							this.app.vault.modify(highlightsFile as TFile ,HighlightsBuilder.map2markdown(mapNew));
+							const mapNew = HighlightsBuilder.mergeComments(mapOld, map);
+							this.app.vault.modify(
+								highlightsFile as TFile,
+								HighlightsBuilder.map2markdown(mapNew)
+							);
 						});
 					}
 				});
@@ -90,34 +94,35 @@ export default class HighlighterPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
-	jumpToHighlight(highlight:highlight){
+	jumpToHighlight(highlight: highlight) {
 		const activeFile = this.app.workspace.getActiveFile();
 		if (!activeFile) return;
-		if(activeFile.path!=highlight.sourcePath){
+		if (activeFile.path != highlight.sourcePath) {
 			const file = this.app.vault.getAbstractFileByPath(highlight.sourcePath);
-			if(!file || !(file instanceof TFile)) return;
-			this.app.workspace.getLeaf()
+			if (!file || !(file instanceof TFile)) return;
+			this.app.workspace
+				.getLeaf()
 				.openFile(file)
-				.then(()=>{
+				.then(() => {
 					this.jumpToContent(highlight.content);
 				});
-		}else{
+		} else {
 			this.jumpToContent(highlight.content);
 		}
 	}
 
-	jumpToContent(content:string){
+	jumpToContent(content: string) {
 		const activeFile = this.app.workspace.getActiveFile();
 		if (!activeFile) return;
-		this.app.vault.cachedRead(activeFile).then((content2:string)=>{
+		this.app.vault.cachedRead(activeFile).then((content2: string) => {
 			const editor = this.app.workspace.activeEditor.editor;
 			const st = content2.indexOf(content);
-			const ed = st+content.length;
-			const range:EditorRange = {
-				"from":editor.offsetToPos(st),
-				"to":editor.offsetToPos(ed)
+			const ed = st + content.length;
+			const range: EditorRange = {
+				from: editor.offsetToPos(st),
+				to: editor.offsetToPos(ed),
 			};
-			editor.scrollIntoView(range,true);
+			editor.scrollIntoView(range, true);
 		});
 	}
 }

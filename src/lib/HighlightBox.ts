@@ -3,76 +3,77 @@ import { getHighlights, highlight } from "./getHighlights";
 
 import * as path from "path";
 
-export class HighlightBox{
-	app:App;
-	path:string;
-	constructor(app:App,path:string){
+export class HighlightBox {
+	app: App;
+	path: string;
+	constructor(app: App, path: string) {
 		this.app = app;
-		this.path=path;
+		this.path = path;
 	}
-	static type(type:string){
-		if(type=="MOC")return MocBox;
-		if(type=="Folder")return FolderBox;
+	static type(type: string) {
+		if (type == "MOC") return MocBox;
+		if (type == "Folder") return FolderBox;
 		throw new Error("Invalid type");
 	}
-	static tagCheck(app:App,path:string,boxTags:string[]):boolean{
+	static tagCheck(app: App, path: string, boxTags: string[]): boolean {
 		const tags = app.metadataCache.getCache(path)?.frontmatter.tags || [];
-		return tags.some((tag:string) => boxTags.includes(tag));
+		return tags.some((tag: string) => boxTags.includes(tag));
 	}
-	async getHighlights():Promise<highlight[]>{
+	async getHighlights(): Promise<highlight[]> {
 		const notes = this.getNotes();
-		const highlights:highlight[] = [];
+		const highlights: highlight[] = [];
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		return new Promise<highlight[]>((resolve,_reject)=>{
-			for(const note of notes){
-				this.app.vault.cachedRead(note).then((content:string)=>{
-					const highlightsInNote = getHighlights(content,note.path);
+		return new Promise<highlight[]>((resolve, _reject) => {
+			for (const note of notes) {
+				this.app.vault.cachedRead(note).then((content: string) => {
+					const highlightsInNote = getHighlights(content, note.path);
 					highlights.push(...highlightsInNote);
 				});
 			}
 			resolve(highlights);
 		});
 	}
-	getNotes():TFile[] {
+	getNotes(): TFile[] {
 		throw new Error("Method not implemented.");
 	}
 }
 
-class MocBox extends HighlightBox{
-	static findBox(app:App,path:string,boxTags:string[]):MocBox{
+class MocBox extends HighlightBox {
+	static findBox(app: App, path: string, boxTags: string[]): MocBox {
 		const file = app.vault.getAbstractFileByPath(path);
-		if(!file || !(file instanceof TFile)) return;
+		if (!file || !(file instanceof TFile)) return;
 		const backlinks =
 			// @ts-ignore
 			app.metadataCache.getBacklinksForFile(file);
 
-		const result = Object.keys(backlinks.data).filter((path:string) => this.tagCheck(app,path,boxTags))[0];
+		const result = Object.keys(backlinks.data).filter((path: string) =>
+			this.tagCheck(app, path, boxTags)
+		)[0];
 		return new MocBox(app, result);
 	}
-	getNotes():TFile[]{
+	getNotes(): TFile[] {
 		const notes = this.app.metadataCache.getCache(this.path).links.map((link) => {
-			const file = this.app.vault.getAbstractFileByPath(link.link+".md");
-			if(!file) return;
+			const file = this.app.vault.getAbstractFileByPath(link.link + ".md");
+			if (!file) return;
 			return file as TFile;
 		});
 		return notes;
 	}
 }
 
-class FolderBox extends HighlightBox{ 
-	static findBox(app:App,_path:string,boxTags:string[]):FolderBox{
+class FolderBox extends HighlightBox {
+	static findBox(app: App, _path: string, boxTags: string[]): FolderBox {
 		const dir = path.dirname(_path);
-		const folderNote =  dir + "/" + path.basename(dir) + ".md";
-		if (this.tagCheck(app,folderNote,boxTags)) return new FolderBox(app,folderNote);
-		if (dir==".") return;
-		return FolderBox.findBox(app,dir,boxTags);
+		const folderNote = dir + "/" + path.basename(dir) + ".md";
+		if (this.tagCheck(app, folderNote, boxTags)) return new FolderBox(app, folderNote);
+		if (dir == ".") return;
+		return FolderBox.findBox(app, dir, boxTags);
 	}
-	getNotes():TFile[]{
+	getNotes(): TFile[] {
 		const dir = path.dirname(this.path);
-		const files = this.app.vault.getMarkdownFiles().filter((file)=>
-			file.path.split("/").includes(dir)
-		);
+		const files = this.app.vault
+			.getMarkdownFiles()
+			.filter((file) => file.path.split("/").includes(dir));
 		return files;
 	}
 }
-
