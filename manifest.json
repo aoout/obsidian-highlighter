@@ -1,10 +1,11 @@
 {
 	"id": "highlighter",
 	"name": "Highlighter",
-	"version": "0.0.5",
-	"minAppVersion": "0.15.0",
-	"description": "Management Highlights in your vault.",
+	"description": "manage, display the highlights, and comment them in a elegant way.",
 	"author": "aoout",
 	"authorUrl": "https://github.com/aoout",
-	"isDesktopOnly": false
+
+	"isDesktopOnly": false,
+	"minAppVersion": "0.16.0",
+	"version": "0.0.6"
 }
