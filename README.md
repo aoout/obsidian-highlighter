@@ -4,7 +4,7 @@ manage, display the highlights, and comment them in a elegant way.
 
 ## Usage
 
-> [!warnning]
+> [!warning]
 > It's still early days for this plugin, I suggest you just try using it with the [epub importer](https://github.com/aoout/obsidian-epub-importer) to highlight books and manage higlights.
 
 ### With Epub Import
