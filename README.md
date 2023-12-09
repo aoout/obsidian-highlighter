@@ -7,7 +7,7 @@ manage, display the highlights, and comment them in a elegant way.
 > [!warning]
 > It's still early days for this plugin, I suggest you just try using it with the [epub importer](https://github.com/aoout/obsidian-epub-importer) to highlight books and manage higlights.
 
-### With Epub Import
+### With Epub Importer
 
 When **granularity** is greater than 0, the book chapter notes will be scattered in a folder. In this case, all these notes are called an **HighlightBox**.
 
