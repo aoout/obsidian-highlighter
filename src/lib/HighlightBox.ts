@@ -16,7 +16,7 @@ export class HighlightBox {
 		throw new Error("Invalid type");
 	}
 	static tagCheck(app: App, path: string, boxTags: string[]): boolean {
-		const tags = app.metadataCache.getCache(path)?.frontmatter.tags || [];
+		const tags = app.metadataCache.getCache(path)?.frontmatter?.tags || [];
 		return tags.some((tag: string) => boxTags.includes(tag));
 	}
 	async getHighlights(): Promise<highlight[]> {
@@ -46,9 +46,9 @@ class MocBox extends HighlightBox {
 			// @ts-ignore
 			app.metadataCache.getBacklinksForFile(file);
 
-		const result = Object.keys(backlinks.data).filter((path: string) =>
+		const result = Object.keys(backlinks.data).find((path: string) =>
 			this.tagCheck(app, path, boxTags)
-		)[0];
+		);
 		return new MocBox(app, result);
 	}
 	getNotes(): TFile[] {

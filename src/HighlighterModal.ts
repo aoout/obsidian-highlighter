@@ -4,6 +4,7 @@ import { highlight } from "./lib/getHighlights";
 export class HighlighterModal extends SuggestModal<highlight> {
 	highlighters: highlight[];
 	choosed: (arg0: highlight) => void;
+	emptyStateText = "No highlight files found.";
 	getSuggestions(query: string): highlight[] | Promise<highlight[]> {
 		return this.highlighters.filter((highlight) => highlight.content.includes(query));
 	}
