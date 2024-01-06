@@ -9,6 +9,9 @@ manage, display the highlights, and comment them in a elegant way.
 
 ### With Epub Importer
 
+> [!note]
+> Please set the setting tags on `highlighter` and `epub importer` to be the same.
+
 When **granularity** is greater than 0, the book chapter notes will be scattered in a folder. In this case, all these notes are called an **HighlightBox**.
 
 So when your activeNote is one of the notes, you are in this HighlightBox, and you can search all the highlights of this book through the `Search highlights in current HighlightBox` command.
