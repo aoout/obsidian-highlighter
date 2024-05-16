@@ -28,7 +28,7 @@ When a highlight has a corresponding comment, place the mouse on the highlight a
 
 ![alt text](assets/image-2.png)
 
-## GIFs
+## 🖼️GIFs
 
 ### Jump to highlight
 
