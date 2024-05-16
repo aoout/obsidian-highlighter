@@ -1,4 +1,4 @@
-import { Plugin, EditorRange, TFile } from "obsidian";
+import { Plugin, EditorRange, TFile} from "obsidian";
 import { DEFAULT_SETTINGS, HighlighterSettings } from "./settings/settings";
 import { HighlightBox } from "./lib/HighlightBox";
 import { HighlighterModal } from "./HighlighterModal";
@@ -6,9 +6,11 @@ import { getHighlights, highlight } from "./lib/getHighlights";
 import { HighlighterSettingsTab } from "./settings/settingsTab";
 import path from "path";
 import { HighlightsBuilder } from "./lib/highlightsBuilder";
+import { Popover } from "./popover";
 
 export default class HighlighterPlugin extends Plugin {
 	settings: HighlighterSettings;
+
 	async onload() {
 		console.log("Plugin Highlighter loaded.");
 		await this.loadSettings();
@@ -85,6 +87,8 @@ export default class HighlighterPlugin extends Plugin {
 				return true;
 			},
 		});
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const popover = new Popover(this,this.getCommentByContent);
 	}
 
 	async loadSettings() {
@@ -125,4 +129,30 @@ export default class HighlighterPlugin extends Plugin {
 			editor.scrollIntoView(range, true);
 		});
 	}
+
+	getCommentByContent = async (content: string): Promise<string> => {
+		const activeFile = this.app.workspace.getActiveFile();
+		if (!activeFile) return null;
+
+		const box = HighlightBox.type(this.settings.boxType).findBox(
+			this.app,
+			activeFile.path,
+			this.settings.boxTags
+		);
+		if (!box) return "It is not in a box";
+		const folder = path.dirname(box.path);
+		const highlightsPath = folder + "/" + "highlights.md";
+		const highlightsFile = this.app.vault.getAbstractFileByPath(highlightsPath) as TFile ;
+		const highlightsContent = await this.app.vault.read(highlightsFile);
+
+		const map = HighlightsBuilder.markdown2map(highlightsContent,this.settings.template);
+
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		for (const [_, items] of map.entries()) {
+			const foundItem = items.find((item) => item.content === content);
+			if (foundItem) return foundItem.comment || "Not any comment yet";
+		}
+
+		return "Not any comment yet";
+	};
 }
