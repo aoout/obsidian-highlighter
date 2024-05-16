@@ -44,13 +44,10 @@ export class HighlightsBuilder {
 				.filter((highlight) => highlight);
 			const items: HighlightItem[] = [];
 			highlights.forEach((highlight) => {
-				console.log(highlight.split("\n")[0]);
 				const content = highlight.split("\n")[0].replaceAll(
 					new RegExp(`${template.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(/\\{\\{highlight\\}\\}/g,"(.*)")}`,"g"),
 					"$1"
 				);
-				console.log(template.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(/\\{\\{highlight\\}\\}/g,"(.*)"));
-				console.log(content);
 				const comment = highlight.split(content).splice(1).join("\n").split("@\n")[1];
 				items.push({
 					content: content,
