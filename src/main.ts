@@ -1,4 +1,4 @@
-import { Plugin, EditorRange, TFile} from "obsidian";
+import { Plugin, EditorRange, TFile } from "obsidian";
 import { DEFAULT_SETTINGS, HighlighterSettings } from "./settings/settings";
 import { HighlightBox } from "./lib/HighlightBox";
 import { HighlighterModal } from "./HighlighterModal";
@@ -72,14 +72,20 @@ export default class HighlighterPlugin extends Plugin {
 				box.getHighlights().then((highlights: highlight[]) => {
 					const map = HighlightsBuilder.highlights2map(highlights);
 					if (!highlightsFile) {
-						this.app.vault.create(highlightsPath, HighlightsBuilder.map2markdown(map,this.settings.template));
+						this.app.vault.create(
+							highlightsPath,
+							HighlightsBuilder.map2markdown(map, this.settings.template)
+						);
 					} else {
 						this.app.vault.read(highlightsFile as TFile).then((content: string) => {
-							const mapOld = HighlightsBuilder.markdown2map(content,this.settings.template);
+							const mapOld = HighlightsBuilder.markdown2map(
+								content,
+								this.settings.template
+							);
 							const mapNew = HighlightsBuilder.mergeComments(mapOld, map);
 							this.app.vault.modify(
 								highlightsFile as TFile,
-								HighlightsBuilder.map2markdown(mapNew,this.settings.template)
+								HighlightsBuilder.map2markdown(mapNew, this.settings.template)
 							);
 						});
 					}
@@ -88,7 +94,7 @@ export default class HighlighterPlugin extends Plugin {
 			},
 		});
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const popover = new Popover(this,this.getCommentByContent);
+		const popover = new Popover(this, this.getCommentByContent);
 	}
 
 	async loadSettings() {
@@ -142,10 +148,10 @@ export default class HighlighterPlugin extends Plugin {
 		if (!box) return "It is not in a box";
 		const folder = path.dirname(box.path);
 		const highlightsPath = folder + "/" + "highlights.md";
-		const highlightsFile = this.app.vault.getAbstractFileByPath(highlightsPath) as TFile ;
+		const highlightsFile = this.app.vault.getAbstractFileByPath(highlightsPath) as TFile;
 		const highlightsContent = await this.app.vault.read(highlightsFile);
 
-		const map = HighlightsBuilder.markdown2map(highlightsContent,this.settings.template);
+		const map = HighlightsBuilder.markdown2map(highlightsContent, this.settings.template);
 
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		for (const [_, items] of map.entries()) {
