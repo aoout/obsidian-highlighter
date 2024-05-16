@@ -18,12 +18,13 @@ export class HighlightsBuilder {
 		});
 		return map;
 	}
-	static map2markdown(map: HighlightsMap): string {
+	static map2markdown(map: HighlightsMap, template: string): string {
 		let markdown = "";
 		map.forEach((value, key) => {
 			markdown += `## ${key}\n\n`;
 			value.forEach((item: HighlightItem) => {
-				markdown += `${item.content}\n`;
+				markdown += template.replace("{{highlight}}", item.content);
+				markdown += "\n";
 				if (item.comment) {
 					markdown += `@\n${item.comment}\n`;
 				}
@@ -32,7 +33,7 @@ export class HighlightsBuilder {
 		});
 		return markdown;
 	}
-	static markdown2map(markdown: string): HighlightsMap {
+	static markdown2map(markdown: string, template: string): HighlightsMap {
 		const map = new Map();
 		const notes = markdown.split("## ").splice(1);
 		notes.forEach((note) => {
@@ -43,7 +44,13 @@ export class HighlightsBuilder {
 				.filter((highlight) => highlight);
 			const items: HighlightItem[] = [];
 			highlights.forEach((highlight) => {
-				const content = highlight.split("\n")[0];
+				console.log(highlight.split("\n")[0]);
+				const content = highlight.split("\n")[0].replaceAll(
+					new RegExp(`${template.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(/\\{\\{highlight\\}\\}/g,"(.*)")}`,"g"),
+					"$1"
+				);
+				console.log(template.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&").replaceAll(/\\{\\{highlight\\}\\}/g,"(.*)"));
+				console.log(content);
 				const comment = highlight.split(content).splice(1).join("\n").split("@\n")[1];
 				items.push({
 					content: content,

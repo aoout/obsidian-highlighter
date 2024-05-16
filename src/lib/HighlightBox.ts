@@ -17,6 +17,7 @@ export class HighlightBox {
 	}
 	static tagCheck(app: App, path: string, boxTags: string[]): boolean {
 		const tags = app.metadataCache.getCache(path)?.frontmatter?.tags || [];
+		console.log(tags);
 		return tags.some((tag: string) => boxTags.includes(tag));
 	}
 	async getHighlights(): Promise<highlight[]> {
@@ -45,10 +46,12 @@ class MocBox extends HighlightBox {
 		const backlinks =
 			// @ts-ignore
 			app.metadataCache.getBacklinksForFile(file);
-
-		const result = Object.keys(backlinks.data).find((path: string) =>
-			this.tagCheck(app, path, boxTags)
-		);
+		console.log(backlinks);
+		const result = Object.keys(backlinks.data).find((path: string) =>{
+			console.log(path);
+			return this.tagCheck(app, path, boxTags);
+		});
+		console.log(result);
 		return new MocBox(app, result);
 	}
 	getNotes(): TFile[] {

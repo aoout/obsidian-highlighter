@@ -40,5 +40,17 @@ export class HighlighterSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})
 			);
+
+		new Setting(containerEl)
+			.setName("Template")
+			.setDesc("Change the way highlights are displayed.")
+			.addTextArea((text) =>
+				text
+					.setValue(this.plugin.settings.template)
+					.onChange(async (value) => {
+						this.plugin.settings.template = value;
+						await this.plugin.saveSettings();
+					})
+			);
 	}
 }
