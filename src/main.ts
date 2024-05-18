@@ -66,30 +66,7 @@ export default class HighlighterPlugin extends Plugin {
 				);
 				if (!box) return false;
 				if (checking) return true;
-				const folder = path.dirname(box.path);
-				const highlightsPath = folder + "/" + "highlights.md";
-				const highlightsFile = this.app.vault.getAbstractFileByPath(highlightsPath);
-				box.getHighlights().then((highlights: highlight[]) => {
-					const map = HighlightsBuilder.highlights2map(highlights);
-					if (!highlightsFile) {
-						this.app.vault.create(
-							highlightsPath,
-							HighlightsBuilder.map2markdown(map, this.settings.template)
-						);
-					} else {
-						this.app.vault.read(highlightsFile as TFile).then((content: string) => {
-							const mapOld = HighlightsBuilder.markdown2map(
-								content,
-								this.settings.template
-							);
-							const mapNew = HighlightsBuilder.mergeComments(mapOld, map);
-							this.app.vault.modify(
-								highlightsFile as TFile,
-								HighlightsBuilder.map2markdown(mapNew, this.settings.template)
-							);
-						});
-					}
-				});
+				box.updateHighlightsNote(this.settings.template);
 				return true;
 			},
 		});

@@ -2,6 +2,7 @@ import { App, TFile } from "obsidian";
 import { getHighlights, highlight } from "./getHighlights";
 
 import * as path from "path";
+import { HighlightsBuilder } from "./highlightsBuilder";
 
 export class HighlightBox {
 	app: App;
@@ -36,6 +37,34 @@ export class HighlightBox {
 	getNotes(): TFile[] {
 		throw new Error("Method not implemented.");
 	}
+	getHighlightsNotePath(): string {
+		throw new Error("Method not implemented.");
+	}
+	updateHighlightsNote(template: string): void {
+		this.getHighlights().then((highlights: highlight[])=>{
+			const map = HighlightsBuilder.highlights2map(highlights);
+			const notePath = this.getHighlightsNotePath();
+			const noteFile = this.app.vault.getAbstractFileByPath(notePath) as TFile;
+			if(!highlights) {
+				this.app.vault.create(
+					notePath,
+					HighlightsBuilder.map2markdown(map, template)
+				);
+			}else{
+				this.app.vault.read(noteFile).then((content: string) => {
+					const mapOld = HighlightsBuilder.markdown2map(
+						content,
+						template
+					);
+					const mapNew = HighlightsBuilder.mergeComments(mapOld, map);
+					this.app.vault.modify(
+						noteFile,
+						HighlightsBuilder.map2markdown(mapNew, template)
+					);
+				});
+			}
+		});
+	}
 }
 
 class MocBox extends HighlightBox {
@@ -57,6 +86,9 @@ class MocBox extends HighlightBox {
 			return file as TFile;
 		});
 		return notes;
+	}
+	getHighlightsNotePath(): string {
+		return path.dirname(this.path) + "/" + "highlights.md";
 	}
 }
 
