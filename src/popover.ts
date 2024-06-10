@@ -1,15 +1,15 @@
-import { HoverPopover, MarkdownView, Plugin } from "obsidian";
+import { MarkdownView } from "obsidian";
+import { HighlightBox } from "./lib/HighlightBox";
+import HighlighterPlugin from "./main";
+import path from "path";
 
 export class Popover {
-	private plugin: Plugin;
-	private textGetter;
+	private plugin: HighlighterPlugin;
 	private cursorClientX = 0;
 	private cursorClientY = 0;
-	private popoverShown = false;
 
-	constructor(plugin: Plugin, textGetter) {
+	constructor(plugin: HighlighterPlugin) {
 		this.plugin = plugin;
-		this.textGetter = textGetter;
 		this.init();
 	}
 
@@ -24,42 +24,31 @@ export class Popover {
 		this.cursorClientY = event.clientY;
 	};
 
-	private handlePopoverEvents = async (event: MouseEvent, show: boolean) => {
+	private handlePopoverEvents = async (event: MouseEvent) => {
 		if (event.ctrlKey || event.metaKey) {
 			const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 			if (!activeView) return;
 
 			const el = event.currentTarget as Element;
-			if (show) {
-				await this.showPopoverForElement(activeView, el as HTMLElement);
-			} else {
-				activeView.hoverPopover = null;
-			}
+			const activeFile = this.plugin.app.workspace.getActiveFile();
+			const box = HighlightBox.type(this.plugin.settings.boxType).findBox(
+				this.plugin.app,
+				activeFile.path,
+				this.plugin.settings.boxTags
+			);
+
+			const folder = path.dirname(box.path);
+			const highlightsPath = folder + "/" + "highlights.md";
+			this.plugin.app.workspace.trigger("hover-link", {
+				event: event,
+				source: "highlighter",
+				hoverParent: activeView.containerEl,
+				targetEl: el,
+				linktext: highlightsPath,
+				sourcePath: highlightsPath,
+			});
 		}
 	};
-
-	private showPopoverForElement = async (view: MarkdownView, el: HTMLElement) => {
-		if (this.popoverShown) return;
-
-		const popover = new HoverPopover(view, el, null);
-		popover.onload = () => (this.popoverShown = true);
-		popover.onunload = () => (this.popoverShown = false);
-		popover.hoverEl.innerHTML = this.getPopoverLayout(
-			await this.textGetter(el.firstChild?.textContent)
-		);
-	};
-
-	private getPopoverLayout(textContent: string) {
-		return `<div class="markdown-embed is-loaded" style="height: revert">
-			<div class="markdown-embed-content">
-				<div class="markdown-preview-view markdown-rendered node-insert-event show-indentation-guide allow-fold-headings allow-fold-lists">
-					<div class="markdown-preview-sizer markdown-preview-section">
-						<p>${textContent}</p>
-					</div>
-				</div>
-			</div>
-		</div>`;
-	}
 
 	private onKeyChange = (event: KeyboardEvent) => {
 		if (event.key === "Control") {
@@ -68,23 +57,23 @@ export class Popover {
 			commentsEls.forEach((el) => {
 				if (isKeyDown) {
 					el.addEventListener("mouseover", (e) =>
-						this.handlePopoverEvents(e as MouseEvent, true)
+						this.handlePopoverEvents(e as MouseEvent)
 					);
 					el.addEventListener("mousemove", (e) =>
-						this.handlePopoverEvents(e as MouseEvent, true)
+						this.handlePopoverEvents(e as MouseEvent)
 					);
 					el.addEventListener("mouseleave", (e) =>
-						this.handlePopoverEvents(e as MouseEvent, false)
+						this.handlePopoverEvents(e as MouseEvent)
 					);
 				} else {
 					el.removeEventListener("mouseover", (e) =>
-						this.handlePopoverEvents(e as MouseEvent, true)
+						this.handlePopoverEvents(e as MouseEvent)
 					);
 					el.removeEventListener("mousemove", (e) =>
-						this.handlePopoverEvents(e as MouseEvent, true)
+						this.handlePopoverEvents(e as MouseEvent)
 					);
 					el.removeEventListener("mouseleave", (e) =>
-						this.handlePopoverEvents(e as MouseEvent, false)
+						this.handlePopoverEvents(e as MouseEvent)
 					);
 				}
 			});
