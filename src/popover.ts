@@ -47,6 +47,17 @@ export class Popover {
 				linktext: highlightsPath,
 				sourcePath: highlightsPath,
 			});
+			const content = el.firstChild?.textContent;
+			const comment = await this.plugin.getCommentByContent(content);
+			this.plugin.registerEvent(
+				this.plugin.app.workspace.on("active-leaf-change", ()=>{
+					if(comment!="Not any comment yet"){
+						this.plugin.jumpToContent(comment);
+					}else{
+						this.plugin.jumpToContent(content);
+					}
+				})
+			);
 		}
 	};
 
