@@ -70,6 +70,14 @@ export default class HighlighterPlugin extends Plugin {
 				return true;
 			},
 		});
+		this.registerEvent(
+			this.app.workspace.on("editor-change",async (editor, info)=>{
+				//@ts-ignore
+				await info.save();
+				//@ts-ignore
+				this.app.commands.executeCommandById("highlighter:update-highlights-file");
+			})
+		);
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const popover = new Popover(this, this.getCommentByContent);
 	}
