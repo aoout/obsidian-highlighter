@@ -2,6 +2,7 @@ import { App, TFile } from "obsidian";
 import { getHighlights, highlight } from "./getHighlights";
 
 import * as path from "path";
+import { HighlightsBuilder } from "./highlightsBuilder";
 
 export class HighlightBox {
 	app: App;
@@ -21,20 +22,44 @@ export class HighlightBox {
 	}
 	async getHighlights(): Promise<highlight[]> {
 		const notes = this.getNotes();
-		const highlights: highlight[] = [];
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		return new Promise<highlight[]>((resolve, _reject) => {
-			for (const note of notes) {
-				this.app.vault.cachedRead(note).then((content: string) => {
-					const highlightsInNote = getHighlights(content, note.path);
-					highlights.push(...highlightsInNote);
-				});
-			}
-			resolve(highlights);
-		});
+		const highlights: highlight[] = (await Promise.all(
+			notes.map(async (note) => {
+				const content = await this.app.vault.read(note);
+				return getHighlights(content, note.path);
+			})
+		)).flat();
+		return highlights;
 	}
 	getNotes(): TFile[] {
 		throw new Error("Method not implemented.");
+	}
+	getHighlightsNotePath(): string {
+		throw new Error("Method not implemented.");
+	}
+	async updateHighlightsNote(template: string): Promise<void> {
+		const highlights: highlight[] = await this.getHighlights();
+		
+		const map = HighlightsBuilder.highlights2map(highlights);
+		const notePath = this.getHighlightsNotePath();
+		const noteFile = this.app.vault.getAbstractFileByPath(notePath) as TFile;
+		if (!highlights) {
+			await this.app.vault.create(
+				notePath,
+				HighlightsBuilder.map2markdown(map, template)
+			);
+		} else {
+			const content: string = await this.app.vault.read(noteFile);
+			const mapOld = HighlightsBuilder.markdown2map(
+				content,
+				template
+			);
+			const mapNew = HighlightsBuilder.mergeComments(mapOld, map);
+			await this.app.vault.modify(
+				noteFile,
+				HighlightsBuilder.map2markdown(mapNew, template)
+			);
+		}
 	}
 }
 
@@ -57,6 +82,9 @@ class MocBox extends HighlightBox {
 			return file as TFile;
 		});
 		return notes;
+	}
+	getHighlightsNotePath(): string {
+		return path.dirname(this.path) + "/" + "highlights.md";
 	}
 }
 
