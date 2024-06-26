@@ -72,8 +72,15 @@ export default class HighlighterPlugin extends Plugin {
 		});
 		this.registerEvent(
 			this.app.workspace.on("editor-change",async (editor, info)=>{
+				const box = HighlightBox.type(this.settings.boxType).findBox(
+					this.app,
+					info.file.path,
+					this.settings
+				);
+				if (!box) return;
 				//@ts-ignore
 				await info.save();
+
 				//@ts-ignore
 				this.app.commands.executeCommandById("highlighter:update-highlights-file");
 			})
