@@ -3,6 +3,8 @@ export interface HighlighterSettings {
 	boxType: string;
 	template: string;
 	popupType: string;
+	storage: string;
+	autoUpdate: boolean;
 }
 
 export const DEFAULT_SETTINGS: HighlighterSettings = {
@@ -10,4 +12,6 @@ export const DEFAULT_SETTINGS: HighlighterSettings = {
 	boxType: "MOC",
 	template: "{{highlight}}",
 	popupType: "default"
+	storage: "highlights",
+	autoUpdate: false
 };

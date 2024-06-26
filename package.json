@@ -1,6 +1,6 @@
 {
 	"name": "highlighter",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "manage, display the highlights, and comment them in a elegant way.",
 	"main": "lib/main.js",
 	"license": "MIT",
