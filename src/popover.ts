@@ -1,15 +1,18 @@
-import { MarkdownView } from "obsidian";
+import { HoverPopover, MarkdownView } from "obsidian";
 import { HighlightBox } from "./lib/HighlightBox";
 import HighlighterPlugin from "./main";
 import path from "path";
 
 export class Popover {
 	private plugin: HighlighterPlugin;
+	private textGetter;
 	private cursorClientX = 0;
 	private cursorClientY = 0;
+	private popoverShown = false;
 
-	constructor(plugin: HighlighterPlugin) {
+	constructor(plugin: HighlighterPlugin, textGetter) {
 		this.plugin = plugin;
+		this.textGetter = textGetter;
 		this.init();
 	}
 
@@ -24,7 +27,19 @@ export class Popover {
 		this.cursorClientY = event.clientY;
 	};
 
-	private handlePopoverEvents = async (event: MouseEvent) => {
+	private handlePopoverEvents = async (event: MouseEvent, show: boolean) => {
+		const mode = this.plugin.app.workspace.getActiveViewOfType(MarkdownView).getMode();
+		if (
+			this.plugin.settings.popupType == "always type1" ||
+			(mode == "source" && this.plugin.settings.popupType != "always type2")
+		) {
+			this.showPopupType1(event);
+		}else{
+			this.showPopupType2(event, show);
+		}
+	};
+
+	private showPopupType1 = async (event: MouseEvent) => {
 		if (event.ctrlKey || event.metaKey) {
 			const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 			if (!activeView) return;
@@ -50,10 +65,10 @@ export class Popover {
 			const content = el.firstChild?.textContent;
 			const comment = await this.plugin.getCommentByContent(content);
 			this.plugin.registerEvent(
-				this.plugin.app.workspace.on("active-leaf-change", ()=>{
-					if(comment!="Not any comment yet"){
+				this.plugin.app.workspace.on("active-leaf-change", () => {
+					if (comment != "Not any comment yet") {
 						this.plugin.jumpToContent(comment);
-					}else{
+					} else {
 						this.plugin.jumpToContent(content);
 					}
 				})
@@ -61,30 +76,58 @@ export class Popover {
 		}
 	};
 
+	private showPopupType2 = async (event: MouseEvent, show: boolean) => {
+		if (event.ctrlKey || event.metaKey) {
+			const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
+			if (!activeView) return;
+
+			const el = event.currentTarget as Element;
+			if (show) {
+				if (this.popoverShown) return;
+
+				const popover = new HoverPopover(activeView, el as HTMLElement, null);
+				popover.onload = () => (this.popoverShown = true);
+				popover.onunload = () => (this.popoverShown = false);
+				popover.hoverEl.innerHTML = `<div class="markdown-embed is-loaded" style="height: revert">
+					<div class="markdown-embed-content">
+						<div class="markdown-preview-view markdown-rendered node-insert-event show-indentation-guide allow-fold-headings allow-fold-lists">
+							<div class="markdown-preview-sizer markdown-preview-section">
+								<p>${await this.textGetter(el.firstChild?.textContent)}</p>
+							</div>
+						</div>
+					</div>
+				</div>`;
+			} else {
+				activeView.hoverPopover = null;
+			}
+		}
+	};
+
 	private onKeyChange = (event: KeyboardEvent) => {
 		if (event.key === "Control") {
 			const isKeyDown = event.type === "keydown";
-			const commentsEls = document.querySelectorAll("[class='cm-highlight']");
-			commentsEls.forEach((el) => {
+			const commentsEls = document.querySelectorAll("[class='cm-highlight']").values();
+			const commentsEls2 = document.querySelectorAll("mark").values();
+			[...commentsEls, ...commentsEls2].forEach((el) => {
 				if (isKeyDown) {
 					el.addEventListener("mouseover", (e) =>
-						this.handlePopoverEvents(e as MouseEvent)
+						this.handlePopoverEvents(e as MouseEvent, true)
 					);
 					el.addEventListener("mousemove", (e) =>
-						this.handlePopoverEvents(e as MouseEvent)
+						this.handlePopoverEvents(e as MouseEvent, true)
 					);
 					el.addEventListener("mouseleave", (e) =>
-						this.handlePopoverEvents(e as MouseEvent)
+						this.handlePopoverEvents(e as MouseEvent, false)
 					);
 				} else {
 					el.removeEventListener("mouseover", (e) =>
-						this.handlePopoverEvents(e as MouseEvent)
+						this.handlePopoverEvents(e as MouseEvent, true)
 					);
 					el.removeEventListener("mousemove", (e) =>
-						this.handlePopoverEvents(e as MouseEvent)
+						this.handlePopoverEvents(e as MouseEvent, true)
 					);
 					el.removeEventListener("mouseleave", (e) =>
-						this.handlePopoverEvents(e as MouseEvent)
+						this.handlePopoverEvents(e as MouseEvent, false)
 					);
 				}
 			});

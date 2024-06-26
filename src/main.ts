@@ -94,7 +94,7 @@ export default class HighlighterPlugin extends Plugin {
 			},
 		});
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const popover = new Popover(this);
+		const popover = new Popover(this, this.getCommentByContent);
 	}
 
 	async loadSettings() {

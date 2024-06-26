@@ -52,5 +52,22 @@ export class HighlighterSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})
 			);
+
+		new Setting(containerEl)
+			.setName("popup type")
+			.setDesc("Use different types of popups.")
+			.addDropdown((text) =>
+				text
+					.addOptions({
+						"default": "default",
+						"always type1": "always type1",
+						"always type2": "always type2",
+					})
+					.setValue(this.plugin.settings.popupType)
+					.onChange(async (value) => {
+						this.plugin.settings.popupType = value;
+						await this.plugin.saveSettings();
+					})
+			);
 	}
 }
