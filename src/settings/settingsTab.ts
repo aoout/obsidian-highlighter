@@ -65,5 +65,15 @@ export class HighlighterSettingsTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					})
 			);
+
+		new Setting(containerEl)
+			.setName("auto update highlights file")
+			.setDesc("Auto update highlights file.")
+			.addToggle((toggle) => {
+				toggle.setValue(this.plugin.settings.autoUpdate).onChange(async (value) => {
+					this.plugin.settings.autoUpdate = value;
+					await this.plugin.saveSettings();
+				});
+			});
 	}
 }

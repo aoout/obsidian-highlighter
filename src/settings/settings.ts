@@ -3,11 +3,13 @@ export interface HighlighterSettings {
 	boxType: string;
 	template: string;
 	storage: string;
+	autoUpdate: boolean;
 }
 
 export const DEFAULT_SETTINGS: HighlighterSettings = {
 	boxTags: ["HighlightBox"],
 	boxType: "MOC",
 	template: "{{highlight}}",
-	storage: "highlights"
+	storage: "highlights",
+	autoUpdate: false
 };
