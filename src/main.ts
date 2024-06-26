@@ -41,7 +41,7 @@ export default class HighlighterPlugin extends Plugin {
 				const box = HighlightBox.type(this.settings.boxType).findBox(
 					this.app,
 					activeFile.path,
-					this.settings.boxTags
+					this.settings
 				);
 				if (!box) return false;
 				if (checking) return true;
@@ -62,7 +62,7 @@ export default class HighlighterPlugin extends Plugin {
 				const box = HighlightBox.type(this.settings.boxType).findBox(
 					this.app,
 					activeFile.path,
-					this.settings.boxTags
+					this.settings
 				);
 				if (!box) return false;
 				if (checking) return true;
@@ -128,11 +128,11 @@ export default class HighlighterPlugin extends Plugin {
 		const box = HighlightBox.type(this.settings.boxType).findBox(
 			this.app,
 			activeFile.path,
-			this.settings.boxTags
+			this.settings
 		);
 		if (!box) return "It is not in a box";
 		const folder = path.dirname(box.path);
-		const highlightsPath = folder + "/" + "highlights.md";
+		const highlightsPath = folder + "/" + this.settings.storage + ".md";
 		const highlightsFile = this.app.vault.getAbstractFileByPath(highlightsPath) as TFile;
 		const highlightsContent = await this.app.vault.read(highlightsFile);
 

@@ -3,12 +3,15 @@ import { getHighlights, highlight } from "./getHighlights";
 
 import * as path from "path";
 import { HighlightsBuilder } from "./highlightsBuilder";
+import { HighlighterSettings } from "../settings/settings";
 
 export class HighlightBox {
 	app: App;
+	settings: HighlighterSettings;
 	path: string;
-	constructor(app: App, path: string) {
+	constructor(app: App, settings:HighlighterSettings, path: string) {
 		this.app = app;
+		this.settings = settings;
 		this.path = path;
 	}
 	static type(type: string) {
@@ -42,8 +45,9 @@ export class HighlightBox {
 		
 		const map = HighlightsBuilder.highlights2map(highlights);
 		const notePath = this.getHighlightsNotePath();
-		const noteFile = this.app.vault.getAbstractFileByPath(notePath) as TFile;
-		if (!highlights) {
+		const noteFile = this.app.vault.getAbstractFileByPath(notePath);
+		
+		if (!(noteFile instanceof TFile)) {
 			await this.app.vault.create(
 				notePath,
 				HighlightsBuilder.map2markdown(map, template)
@@ -64,16 +68,16 @@ export class HighlightBox {
 }
 
 class MocBox extends HighlightBox {
-	static findBox(app: App, path: string, boxTags: string[]): MocBox {
+	static findBox(app: App, path: string, settings:HighlighterSettings): MocBox {
 		const file = app.vault.getAbstractFileByPath(path);
 		if (!file || !(file instanceof TFile)) return;
 		const backlinks =
 			// @ts-ignore
 			app.metadataCache.getBacklinksForFile(file);
 		const result = Object.keys(backlinks.data).find((path: string) =>{
-			return this.tagCheck(app, path, boxTags);
+			return this.tagCheck(app, path, settings.boxTags);
 		});
-		return new MocBox(app, result);
+		return new MocBox(app,settings, result);
 	}
 	getNotes(): TFile[] {
 		const notes = this.app.metadataCache.getCache(this.path).links.map((link) => {
@@ -84,17 +88,17 @@ class MocBox extends HighlightBox {
 		return notes;
 	}
 	getHighlightsNotePath(): string {
-		return path.dirname(this.path) + "/" + "highlights.md";
+		return path.dirname(this.path) + "/" + this.settings.storage +  ".md";
 	}
 }
 
 class FolderBox extends HighlightBox {
-	static findBox(app: App, _path: string, boxTags: string[]): FolderBox {
+	static findBox(app: App, _path: string,settings:HighlighterSettings): FolderBox {
 		const dir = path.dirname(_path);
 		const folderNote = dir + "/" + path.basename(dir) + ".md";
-		if (this.tagCheck(app, folderNote, boxTags)) return new FolderBox(app, folderNote);
+		if (this.tagCheck(app, folderNote, settings.boxTags)) return new FolderBox(app,settings, folderNote);
 		if (dir == ".") return;
-		return FolderBox.findBox(app, dir, boxTags);
+		return FolderBox.findBox(app, dir, settings);
 	}
 	getNotes(): TFile[] {
 		const dir = path.dirname(this.path);
