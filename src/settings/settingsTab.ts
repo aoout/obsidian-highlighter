@@ -70,7 +70,7 @@ export class HighlighterSettingsTab extends PluginSettingTab {
 					})
 			);
 
-    new Setting(containerEl)
+		new Setting(containerEl)
 			.setName("Highlights Storage")
 			.setDesc("The name of the note where the highlights are stored.")
 			.addText((text) =>

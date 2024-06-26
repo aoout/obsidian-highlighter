@@ -49,11 +49,11 @@ export class Popover {
 			const box = HighlightBox.type(this.plugin.settings.boxType).findBox(
 				this.plugin.app,
 				activeFile.path,
-				this.plugin.settings.boxTags
+				this.plugin.settings
 			);
 
 			const folder = path.dirname(box.path);
-			const highlightsPath = folder + "/" + "highlights.md";
+			const highlightsPath = folder + "/" + this.plugin.settings.storage +  ".md";
 			this.plugin.app.workspace.trigger("hover-link", {
 				event: event,
 				source: "highlighter",

@@ -11,7 +11,7 @@ export const DEFAULT_SETTINGS: HighlighterSettings = {
 	boxTags: ["HighlightBox"],
 	boxType: "MOC",
 	template: "{{highlight}}",
-	popupType: "default"
+	popupType: "default",
 	storage: "highlights",
 	autoUpdate: false
 };
