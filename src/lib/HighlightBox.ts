@@ -1,7 +1,9 @@
 import { App, TFile } from "obsidian";
 import { getHighlights, highlight } from "./getHighlights";
 
-import * as path from "path";
+import { PlatformPath } from "path/posix";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const path = (require("path-browserify").posix) as PlatformPath;
 import { HighlightsBuilder } from "./highlightsBuilder";
 import { HighlighterSettings } from "../settings/settings";
 

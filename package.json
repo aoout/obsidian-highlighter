@@ -1,6 +1,6 @@
 {
 	"name": "highlighter",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"description": "manage, display the highlights, and comment them in a elegant way.",
 	"main": "lib/main.js",
 	"license": "MIT",
@@ -39,6 +39,7 @@
 		"typescript": "^5.0.4"
 	},
 	"dependencies": {
-		"commit-and-tag-version": "^11.0.0"
+		"commit-and-tag-version": "^11.0.0",
+		"path-browserify": "^1.0.1"
 	}
 }

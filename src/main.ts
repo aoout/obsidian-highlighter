@@ -4,7 +4,9 @@ import { HighlightBox } from "./lib/HighlightBox";
 import { HighlighterModal } from "./HighlighterModal";
 import { getHighlights, highlight } from "./lib/getHighlights";
 import { HighlighterSettingsTab } from "./settings/settingsTab";
-import path from "path";
+import { PlatformPath } from "path/posix";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const path = (require("path-browserify").posix) as PlatformPath;
 import { HighlightsBuilder } from "./lib/highlightsBuilder";
 import { Popover } from "./popover";
 
