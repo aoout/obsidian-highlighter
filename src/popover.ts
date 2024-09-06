@@ -1,7 +1,9 @@
 import { HoverPopover, MarkdownView } from "obsidian";
 import { HighlightBox } from "./lib/HighlightBox";
 import HighlighterPlugin from "./main";
-import path from "path";
+import { PlatformPath } from "path/posix";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const path = (require("path-browserify").posix) as PlatformPath;
 
 export class Popover {
 	private plugin: HighlighterPlugin;
