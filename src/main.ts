@@ -9,6 +9,7 @@ import { PlatformPath } from "path/posix";
 export const path = (require("path-browserify").posix) as PlatformPath;
 import { HighlightsBuilder } from "./lib/highlightsBuilder";
 import { Popover } from "./popover";
+import { Platform } from "obsidian";
 
 export default class HighlighterPlugin extends Plugin {
 	settings: HighlighterSettings;
@@ -88,8 +89,10 @@ export default class HighlighterPlugin extends Plugin {
 				this.app.commands.executeCommandById("highlighter:update-highlights-file");
 			})
 		);
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const popover = new Popover(this, this.getCommentByContent);
+		if (!Platform.isMobileApp) {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			const popover = new Popover(this, this.getCommentByContent);
+		}
 	}
 
 	async loadSettings() {
