@@ -34,7 +34,7 @@ When a highlight has a corresponding comment, place the mouse on the highlight a
 
 ![alt text](assets/Obsidian_L2n1q4dAVu.gif)
 
-## How it works &... Why?
+## ⚙️How it works &... Why?
 
 Highlighter matches each highlight solely based on the string content. This can lead to issues when there are two identical highlights, resulting in unpredictable outcomes.
 
