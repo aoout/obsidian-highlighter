@@ -33,3 +33,11 @@ When a highlight has a corresponding comment, place the mouse on the highlight a
 ### Jump to highlight
 
 ![alt text](assets/Obsidian_L2n1q4dAVu.gif)
+
+## How it works &... Why?
+
+Highlighter matches each highlight solely based on the string content. This can lead to issues when there are two identical highlights, resulting in unpredictable outcomes.
+
+The reason Highlighter does this, instead of using block IDs like many other plugins to mark and track each highlight, is that it aims to adhere to the File Over App philosophy as an Obsidian plugin. It strives to provide powerful highlighting and management features without adding any extra content or data that would disrupt the native semantics of the files.
+
+If one day this plugin stops being updated or you decide to stop using Obsidian, your markdown files will still retain everything, such as the native markdown highlighting syntax and a visually intuitive highlights file. Additionally, your markdown source files won’t be cluttered with strange block IDs or CSS pollution.
