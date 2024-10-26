@@ -76,9 +76,9 @@ class MocBox extends HighlightBox {
 		const backlinks =
 			// @ts-ignore
 			app.metadataCache.getBacklinksForFile(file);
-		const result = Object.keys(backlinks.data).find((path: string) =>{
-			return this.tagCheck(app, path, settings.boxTags);
-		});
+		const result = Array.from(backlinks.data).find((backlink) =>{
+			return this.tagCheck(app, backlink[0], settings.boxTags);
+		})[0];
 		return new MocBox(app,settings, result);
 	}
 	getNotes(): TFile[] {
