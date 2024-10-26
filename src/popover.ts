@@ -32,16 +32,16 @@ export class Popover {
 	private handlePopoverEvents = async (event: MouseEvent, show: boolean) => {
 		const mode = this.plugin.app.workspace.getActiveViewOfType(MarkdownView).getMode();
 		if (
-			this.plugin.settings.popupType == "always type1" ||
-			(mode == "source" && this.plugin.settings.popupType != "always type2")
+			this.plugin.settings.popupType == "always Editable" ||
+			(mode == "source" && this.plugin.settings.popupType != "always Readonly")
 		) {
-			this.showPopupType1(event);
+			this.showEditablePopup(event);
 		}else{
-			this.showPopupType2(event, show);
+			this.showReadonlyPopup(event, show);
 		}
 	};
 
-	private showPopupType1 = async (event: MouseEvent) => {
+	private showEditablePopup = async (event: MouseEvent) => {
 		if (event.ctrlKey || event.metaKey) {
 			const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 			if (!activeView) return;
@@ -78,7 +78,7 @@ export class Popover {
 		}
 	};
 
-	private showPopupType2 = async (event: MouseEvent, show: boolean) => {
+	private showReadonlyPopup = async (event: MouseEvent, show: boolean) => {
 		if (event.ctrlKey || event.metaKey) {
 			const activeView = this.plugin.app.workspace.getActiveViewOfType(MarkdownView);
 			if (!activeView) return;
