@@ -59,9 +59,9 @@ export class HighlighterSettingsTab extends PluginSettingTab {
 			.addDropdown((text) =>
 				text
 					.addOptions({
-						"default": "default",
-						"always type1": "always type1",
-						"always type2": "always type2",
+						"same as active file mode": "same as active file mode",
+						"always Editable": "always Editable",
+						"always Readonly": "always Readonly",
 					})
 					.setValue(this.plugin.settings.popupType)
 					.onChange(async (value) => {
