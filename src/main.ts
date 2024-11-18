@@ -73,6 +73,54 @@ export default class HighlighterPlugin extends Plugin {
 				return true;
 			},
 		});
+		this.addCommand({
+			id: "restore-highlights-from-file",
+			name: "Restore highlights from .highlight file", 
+			checkCallback: (checking: boolean) => {
+				const activeFile = this.app.workspace.getActiveFile();
+				if (!activeFile) return false;
+				console.log(activeFile.path);
+				
+				// Find the highlight box for current file
+				const box = HighlightBox.type(this.settings.boxType).findBox(
+					this.app,
+					activeFile.path,
+					this.settings
+				);
+				if (!box) return false;
+				if (checking) return true;
+
+				// Get all notes in current highlight box
+				const notes = box.getNotes();
+				console.log(notes);
+				
+				// Get highlights file path
+				const folder = path.dirname(box.path);
+				const highlightsPath = folder + "/" + this.settings.storage + ".md";
+				
+				// Read highlights file and restore highlights for all notes
+				this.app.vault.read(this.app.vault.getAbstractFileByPath(highlightsPath) as TFile).then((highlightsContent: string) => {
+					// Parse highlights from file
+					const map = HighlightsBuilder.markdown2map(highlightsContent, this.settings.template);
+					
+					// Process each note
+					notes.forEach((note) => {
+						this.app.vault.cachedRead(note).then((content: string) => {
+							let updatedContent = content;
+							// Add highlight markers around each highlight text
+							for (const [_, items] of map.entries()) {
+								items.forEach((item) => {
+									const regex = new RegExp(item.content, 'g');
+									updatedContent = updatedContent.replace(regex, `==${item.content}==`);
+								});
+							}
+							this.app.vault.modify(note, updatedContent);
+						});
+					});
+				});
+				return true;
+			},
+		});
 		this.registerEvent(
 			this.app.workspace.on("editor-change",async (editor, info)=>{
 				if(!this.settings.autoUpdate) return;
