@@ -1,11 +1,10 @@
 {
-	"id": "highlighter",
-	"name": "Highlighter",
-	"description": "Manage Highlights.",
-	"author": "aoout",
-	"authorUrl": "https://github.com/aoout",
-
-	"isDesktopOnly": false,
-	"minAppVersion": "0.16.0",
-	"version": "1.4.0"
+  "id": "highlighter",
+  "name": "Highlighter",
+  "description": "Manage Highlights.",
+  "author": "aoout",
+  "authorUrl": "https://github.com/aoout",
+  "isDesktopOnly": false,
+  "minAppVersion": "0.16.0",
+  "version": "1.4.1"
 }
