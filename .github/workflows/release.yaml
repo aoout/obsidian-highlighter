@@ -1,36 +1,48 @@
-name: Release Obsidian Plugin
+name: Release
+
 on:
-  workflow_dispatch:
-    inputs:
-      bump:
-        default: false
-        description: "Bump version based on semantic release"
-        type: boolean
-        required: false
-      beta:
-        default: false
-        description: "Beta release"
-        type: boolean
-        required: false
   push:
     tags:
       - "*"
 
-permissions:
-  contents: write
 jobs:
   release:
-    if: (github.event_name == 'push') || (github.event_name == 'workflow_dispatch' && !inputs.bump)
-    uses: mara-li/reusable-workflows/.github/workflows/obsidian-plugin-release.yaml@main
-    with:
-      PLUGIN_NAME: "highlighter"
-    secrets: 
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  bump-version:
-    if: ${{ inputs.bump }}
-    uses: mara-li/reusable-workflows/.github/workflows/obsidian-plugin-bump-version.yaml@main
-    with:
-      PLUGIN_NAME: highlighter
-      BETA: ${{ inputs.beta }}
-    secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    name: Build and Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+
+      - name: Ensure dist directory exists
+        run: mkdir -p dist
+
+      - name: Copy manifest.json to dist
+        run: cp manifest.json dist/
+        
+      - name: Build project
+        run: npm run build
+
+      - name: Create release zip
+        run: zip Highlighter.zip dist/main.js dist/manifest.json
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/main.js
+            dist/manifest.json
+            Highlighter.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
