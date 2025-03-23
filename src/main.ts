@@ -15,7 +15,6 @@ export default class HighlighterPlugin extends Plugin {
 	settings: HighlighterSettings;
 
 	async onload() {
-		console.log("Plugin Highlighter loaded.");
 		await this.loadSettings();
 		this.addSettingTab(new HighlighterSettingsTab(this.app, this));
 		this.addCommand({
@@ -79,7 +78,6 @@ export default class HighlighterPlugin extends Plugin {
 			checkCallback: (checking: boolean) => {
 				const activeFile = this.app.workspace.getActiveFile();
 				if (!activeFile) return false;
-				console.log(activeFile.path);
 				
 				// Find the highlight box for current file
 				const box = HighlightBox.type(this.settings.boxType).findBox(
@@ -92,7 +90,6 @@ export default class HighlighterPlugin extends Plugin {
 
 				// Get all notes in current highlight box
 				const notes = box.getNotes();
-				console.log(notes);
 				
 				// Get highlights file path
 				const folder = path.dirname(box.path);
