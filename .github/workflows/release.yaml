@@ -34,7 +34,8 @@ jobs:
         run: npm run build
 
       - name: Create release zip
-        run: zip Highlighter.zip dist/main.js dist/manifest.json
+        run: zip Highlighter.zip main.js manifest.json
+        working-directory: dist
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -42,7 +43,7 @@ jobs:
           files: |
             dist/main.js
             dist/manifest.json
-            Highlighter.zip
+            dist/Highlighter.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
