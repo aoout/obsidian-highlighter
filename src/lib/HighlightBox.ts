@@ -4,7 +4,7 @@ import { getHighlights, highlight } from "./getHighlights";
 import { PlatformPath } from "path/posix";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 export const path = (require("path-browserify").posix) as PlatformPath;
-import { HighlightsBuilder } from "./highlightsBuilder";
+import { HighlightItem, HighlightsBuilder } from "./highlightsBuilder";
 import { HighlighterSettings } from "../settings/settings";
 
 export class HighlightBox {
@@ -66,6 +66,31 @@ export class HighlightBox {
 				HighlightsBuilder.map2markdown(mapNew, template)
 			);
 		}
+	}
+
+	async updateComment(sourcePath:string,highlight:string,comment:string): Promise<void>{
+		const notePath = this.getHighlightsNotePath();
+		const noteFile = this.app.vault.getAbstractFileByPath(notePath);
+		if (!(noteFile instanceof TFile)) return;
+		const content: string = await this.app.vault.read(noteFile);
+		const map = HighlightsBuilder.markdown2map(
+			content,
+			this.settings.template
+		);
+		const title = sourcePath.split("/").splice(-1)[0].split(".md")[0];
+
+		const note = map.get(title);
+		if (note) {
+			const item = note.find((item) => item.content === highlight);
+			if (item) item.comment = comment;
+			else note.push({ content: highlight, comment: comment });
+		} else {
+			map.set(title, [{ content: highlight, comment: comment }]);
+		}
+		await this.app.vault.modify(
+			noteFile,
+			HighlightsBuilder.map2markdown(map, this.settings.template)
+		);
 	}
 }
 
